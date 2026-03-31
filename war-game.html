@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>War Game — Iran Theater, 2026</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050810;--bg2:#0a0f1a;--card:#131b2a;--border:#1a2538;--bh:#253552;--t:#d0d8e4;--t2:#7a8a9e;--t3:#3d4f66;--acc:#4793e0;--red:#ef5350;--amb:#ffc107;--grn:#4caf50;--teal:#26c6da;--pur:#9c7bea;--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+::selection{background:rgba(71,147,224,0.3)}
+
+.screen{display:none;animation:fadeIn 0.4s ease-out}.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(71,147,224,0.1)}50%{box-shadow:0 0 40px rgba(71,147,224,0.2)}}
+
+/* ── TUTORIAL ── */
+.tut{max-width:700px;margin:0 auto;padding:60px 32px;text-align:center}
+.tut h1{font-family:var(--serif);font-size:48px;font-weight:400;color:#fff;margin-bottom:8px}
+.tut h1 em{font-style:italic;color:var(--acc)}
+.tut .tut-sub{font-size:16px;color:var(--t2);margin-bottom:48px}
+.tut-steps{text-align:left;margin-bottom:48px}
+.tut-step{display:flex;gap:20px;margin-bottom:24px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:14px;transition:all 0.3s}
+.tut-step:hover{border-color:var(--bh);transform:translateX(4px)}
+.tut-step .ts-num{font-family:var(--mono);font-size:28px;font-weight:600;min-width:40px;line-height:1}
+.tut-step .ts-title{font-size:15px;font-weight:500;color:#fff;margin-bottom:3px}
+.tut-step .ts-desc{font-size:13px;color:var(--t2);line-height:1.5}
+.tut-start{padding:14px 48px;font-size:16px;font-weight:500;background:var(--acc);border:none;color:#fff;border-radius:10px;cursor:pointer;font-family:var(--sans);transition:all 0.2s;animation:pulseGlow 2s ease-in-out infinite}
+.tut-start:hover{filter:brightness(1.15);transform:scale(1.03)}
+.tut-hint{font-size:12px;color:var(--t3);margin-top:16px}
+
+/* ── TOP BAR ── */
+.top{display:flex;align-items:center;padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.top-title{font-size:13px;font-weight:600;margin-right:4px}
+.top-week{font-family:var(--mono);font-size:12px;color:var(--acc);background:rgba(71,147,224,0.1);padding:3px 10px;border-radius:5px}
+.top-pip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)}
+.top-pip .pip-dot{width:7px;height:7px;border-radius:50%}
+.top-sep{width:1px;height:16px;background:var(--border)}
+
+/* ── GAME LAYOUT ── */
+.game{display:grid;grid-template-columns:1fr 280px;min-height:calc(100vh - 44px)}
+.game-main{padding:20px 24px;overflow-y:auto}
+.game-side{background:var(--bg2);border-left:1px solid var(--border);padding:16px;overflow-y:auto;max-height:calc(100vh - 44px);position:sticky;top:44px}
+
+/* ── PHASE STEPPER ── */
+.stepper{display:flex;gap:4px;margin-bottom:20px}
+.step{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s}
+.step.done{background:var(--acc)}.step.active{background:var(--acc);animation:pulseGlow 1.5s infinite}
+
+.phase-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.phase-title{font-family:var(--serif);font-size:28px;font-weight:400;color:#fff;margin-bottom:4px}
+.phase-desc{font-size:13px;color:var(--t2);margin-bottom:20px;max-width:500px}
+
+/* ── MILITARY PHASE: large visual cards ── */
+.mil-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mil-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden}
+.mil-card:hover{border-color:var(--bh);transform:translateY(-2px)}
+.mil-card.sel{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+.mil-card .mc-icon{font-size:32px;margin-bottom:10px;opacity:0.7}
+.mil-card .mc-name{font-size:15px;font-weight:500;color:#fff;margin-bottom:4px}
+.mil-card .mc-desc{font-size:12px;color:var(--t3);line-height:1.4}
+.mil-card .mc-cost{font-family:var(--mono);font-size:11px;color:var(--amb);margin-top:8px}
+.mil-card .mc-bar{position:absolute;bottom:0;left:0;right:0;height:3px}
+
+/* ── DIPLO PHASE: channel/wire style ── */
+.dip-list{display:flex;flex-direction:column;gap:8px}
+.dip-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s}
+.dip-row:hover{border-color:var(--bh)}
+.dip-row.sel{border-color:var(--teal);background:rgba(38,198,218,0.03)}
+.dip-wire{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all 0.2s}
+.dip-row.sel .dip-wire{border-color:var(--teal);color:var(--teal);background:rgba(38,198,218,0.08)}
+.dip-row .dr-name{font-size:14px;font-weight:500;color:#fff}
+.dip-row .dr-desc{font-size:11px;color:var(--t3)}
+.dip-row .dr-tag{font-size:9px;padding:2px 8px;border-radius:4px;margin-left:auto;flex-shrink:0;font-weight:500}
+
+/* ── COVERT PHASE: classified document style ── */
+.cov-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.cov-header{padding:12px 18px;background:rgba(156,123,234,0.06);border-bottom:1px solid var(--border);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--pur)}
+.cov-item{padding:14px 18px;border-bottom:1px solid rgba(26,37,56,0.4);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:12px}
+.cov-item:hover{background:rgba(156,123,234,0.03)}
+.cov-item.sel{background:rgba(156,123,234,0.06);border-left:3px solid var(--pur)}
+.cov-item:last-child{border-bottom:none}
+.cov-radio{width:14px;height:14px;border-radius:50%;border:2px solid var(--t3);flex-shrink:0;transition:all 0.2s}
+.cov-item.sel .cov-radio{border-color:var(--pur);background:var(--pur);box-shadow:inset 0 0 0 2px var(--card)}
+.cov-item .ci-name{font-size:13px;font-weight:500;color:var(--t)}
+.cov-item .ci-desc{font-size:11px;color:var(--t3)}
+.cov-item .ci-cost{font-family:var(--mono);font-size:10px;color:var(--amb);margin-left:auto;flex-shrink:0}
+
+/* ── RESOLUTION PHASE ── */
+.res-events{margin-bottom:20px}
+.res-ev{padding:12px 16px;border-radius:10px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;animation:slideUp 0.3s ease-out both;border:1px solid}
+.res-ev .re-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.res-ev p{font-size:13px;line-height:1.5}
+
+.next-btn{padding:12px 32px;font-size:14px;font-weight:500;background:var(--acc);border:none;color:#fff;border-radius:10px;cursor:pointer;font-family:var(--sans);transition:all 0.2s;margin-top:12px}
+.next-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.skip-btn{padding:8px 20px;font-size:12px;background:none;border:1px solid var(--border);color:var(--t3);border-radius:8px;cursor:pointer;font-family:var(--sans);transition:all 0.2s;margin-left:8px}
+.skip-btn:hover{border-color:var(--t2);color:var(--t2)}
+
+/* ── SIDEBAR ── */
+.sg{margin-bottom:12px}
+.sg-title{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.sg-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:2px 0}
+.sg-row .sv{font-family:var(--mono);font-weight:500;font-size:12px}
+.sg-bar{height:4px;background:rgba(255,255,255,0.04);border-radius:2px;margin:2px 0 5px;overflow:hidden}
+.sg-bar-fill{height:100%;border-radius:2px;transition:width 0.5s}
+.actor-mini{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:11px}
+.actor-mini .am-bar{flex:1;height:4px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden}
+.actor-mini .am-fill{height:100%;border-radius:2px;transition:width 0.5s}
+.actor-mini .am-name{min-width:56px;color:var(--t2)}
+.actor-mini .am-val{font-family:var(--mono);font-size:10px;min-width:28px;text-align:right}
+
+.endstate-badge{padding:8px 12px;border-radius:8px;text-align:center;font-size:11px;font-weight:500;margin-top:8px}
+.eb-g{background:rgba(76,175,80,0.08);color:var(--grn);border:1px solid rgba(76,175,80,0.2)}
+.eb-a{background:rgba(255,193,7,0.06);color:var(--amb);border:1px solid rgba(255,193,7,0.15)}
+.eb-r{background:rgba(239,83,80,0.06);color:var(--red);border:1px solid rgba(239,83,80,0.15)}
+
+.ev-log{max-height:160px;overflow-y:auto;margin-top:8px}
+.el-entry{font-size:10px;padding:3px 0;border-bottom:1px solid rgba(26,37,56,0.2);color:var(--t2);display:flex;gap:6px}
+.el-entry .el-w{font-family:var(--mono);color:var(--t3);min-width:24px}
+
+.end-card{max-width:600px;margin:40px auto;text-align:center;padding:40px;background:var(--card);border-radius:20px;border:2px solid var(--acc)}
+.end-card h2{font-family:var(--serif);font-size:32px;font-weight:400;margin-bottom:6px}
+.end-card p{font-size:14px;color:var(--t2);line-height:1.6;margin-bottom:20px}
+.end-stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.end-stat .esv{font-family:var(--mono);font-size:22px;font-weight:600}
+.end-stat .esl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+
+.restart-btn{padding:10px 28px;background:none;border:1px solid var(--border);color:var(--t2);border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:13px;transition:all 0.2s}
+.restart-btn:hover{border-color:var(--red);color:var(--red)}
+
+@media(max-width:800px){.game{grid-template-columns:1fr}.game-side{position:static;max-height:none;border-left:none;border-top:1px solid var(--border)}.mil-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ═══ TUTORIAL SCREEN ═══ -->
+<div class="screen active" id="scr-tut">
+<div class="tut">
+<h1>War <em>game</em></h1>
+<p class="tut-sub">Iran theater, 2026 — Turn-based strategic simulation</p>
+<div class="tut-steps">
+<div class="tut-step"><div class="ts-num" style="color:var(--red)">01</div><div><div class="ts-title">Issue military orders</div><div class="ts-desc">Deploy forces, authorize strikes, or hold defensive posture. Each option costs resources and shifts the balance.</div></div></div>
+<div class="tut-step"><div class="ts-num" style="color:var(--teal)">02</div><div><div class="ts-title">Choose a diplomatic track</div><div class="ts-desc">Activate back-channels, negotiate ceasefires, or coordinate with allies. Diplomacy builds capital that kinetic action spends.</div></div></div>
+<div class="tut-step"><div class="ts-num" style="color:var(--pur)">03</div><div><div class="ts-title">Direct covert operations</div><div class="ts-desc">Cyber attacks, HUMINT expansion, economic warfare. High impact, low visibility — but slow to take effect.</div></div></div>
+<div class="tut-step"><div class="ts-num" style="color:var(--amb)">04</div><div><div class="ts-title">Watch the world react</div><div class="ts-desc">Iran, the Houthis, Hezbollah, Saudi Arabia, and Israel all respond. Oil prices shift. Chokepoints open or close. Your choices cascade.</div></div></div>
+</div>
+<button class="tut-start" onclick="startGame()">Begin simulation</button>
+<p class="tut-hint">10 weeks. 3 decisions per week. No undo. Your goal: reopen the chokepoints, contain the conflict, and avoid a global recession.</p>
+</div>
+</div>
+
+<!-- ═══ GAME SCREEN ═══ -->
+<div class="screen" id="scr-game">
+<div class="top">
+<span class="top-title">War game</span>
+<span class="top-week" id="t-week">W5 — Mar 31</span>
+<div class="top-sep"></div>
+<div class="top-pip"><span class="pip-dot" id="pd-horm" style="background:var(--red)"></span><span id="pt-horm">Hormuz: Closed</span></div>
+<div class="top-pip"><span class="pip-dot" id="pd-bab" style="background:var(--grn)"></span><span id="pt-bab">Bab el-Mandeb: Open</span></div>
+<div class="top-sep"></div>
+<div class="top-pip">Oil: <strong id="t-oil" style="margin-left:3px">$110</strong></div>
+</div>
+<div class="game">
+<div class="game-main" id="gmain"></div>
+<div class="game-side" id="gside"></div>
+</div>
+</div>
+
+<script>
+const G={week:5,oil:110,cost:6200,esc:8,rec:35,hormuz:5,bab:85,us:85,il:75,ir:25,ho:60,hz:40,sa:70,coal:50,dip:30,vls:62,phase:0,ch:{mil:null,dip:null,cov:null},log:[],events:[],turns:0,over:false};
+const DATES=['Mar 31','Apr 7','Apr 14','Apr 21','Apr 28','May 5','May 12','May 19','May 26','Jun 2','Jun 9','Jun 16'];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+const MIL=[
+{id:'surge',n:'Surge to Bab el-Mandeb',d:'Deploy additional DDGs. Deterrence posture.',ic:'⚓',cost:200,oil:0,esc:0,bab:5,vls:-3,bar:'var(--acc)'},
+{id:'strike_ho',n:'Strike Houthi targets',d:'Kinetic ops on missile storage and launch sites.',ic:'💥',cost:400,oil:5,esc:1,bab:-10,vls:-8,ho:-10,coal:-10,dip:-10,bar:'var(--red)'},
+{id:'strike_ir',n:'Intensify Iran strikes',d:'Expand to IRGC coastal positions along Hormuz.',ic:'🎯',cost:800,oil:-5,esc:1,hormuz:8,vls:-12,ir:-8,coal:-15,dip:-15,bar:'var(--red)'},
+{id:'defend',n:'Defensive posture',d:'Convoy escorts only. Preserve ceasefire.',ic:'🛡',cost:150,oil:2,esc:0,vls:-4,coal:5,dip:5,bar:'var(--acc)'},
+{id:'drawdown',n:'Begin drawdown',d:'Signal de-escalation. Risk: perceived weakness.',ic:'↩',cost:-50,oil:3,esc:-1,bab:-5,dip:10,us:-2,bar:'var(--grn)'}
+];
+
+const DIP=[
+{id:'oman_ho',n:'Omani channel → Houthis',d:'Negotiate Bab el-Mandeb neutrality',tag:'PRIORITY',tc:'var(--grn)',oil:-3,esc:-1,bab:8,dip:10,coal:5},
+{id:'oman_ir',n:'Iran ceasefire via Oman',d:'Hormuz reopens in exchange for strike pause',tag:'HIGH STAKES',tc:'var(--amb)',oil:-8,esc:-2,hormuz:15,dip:15,coal:10},
+{id:'saudi',n:'Coordinate with Riyadh',d:'Joint maritime framework for Red Sea',tag:'ALLIED',tc:'var(--acc)',oil:-2,bab:5,coal:8,sa:5},
+{id:'un',n:'UN Security Council push',d:'Demand Hormuz reopening. Veto likely.',tag:'SLOW',tc:'var(--t3)',dip:-5,coal:5},
+{id:'none_d',n:'No diplomatic action',d:'Focus elsewhere this week',tag:'HOLD',tc:'var(--t3)'}
+];
+
+const COV=[
+{id:'cyber',n:'CYBERCOM — drone nav spoofing',d:'GPS disruption of Houthi Shahed-136. Deniable.',cost:5,ho:-5,bab:3},
+{id:'humint',n:'Expand CIA HUMINT in Yemen',d:'Rebuild networks post-Aug 2025. Slow burn.',cost:15,ho:-2},
+{id:'spr',n:'SPR release — 2M bbl/day',d:'Suppress oil prices. Limited reserves.',cost:0,oil:-8,rec:-5},
+{id:'sanctions',n:'Treasury sanctions expansion',d:'Target Houthi finance, Iran procurement.',cost:0,ho:-3,ir:-2,oil:2},
+{id:'io',n:'Info ops — Houthi fracture',d:'Exploit internal divisions via penetrated comms.',cost:5,ho:-3},
+{id:'none_c',n:'No covert action',d:'Preserve resources.',cost:0}
+];
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function startGame(){show('scr-game');renderPhase();renderSide()}
+
+function renderPhase(){
+  const m=document.getElementById('gmain');
+  let h=`<div class="stepper"><div class="step ${G.phase>=1?'done':G.phase===0?'active':''}"></div><div class="step ${G.phase>=2?'done':G.phase===1?'active':''}"></div><div class="step ${G.phase>=3?'done':G.phase===2?'active':''}"></div></div>`;
+  if(G.phase===0) h+=renderMilPhase();
+  else if(G.phase===1) h+=renderDipPhase();
+  else if(G.phase===2) h+=renderCovPhase();
+  else if(G.phase===3) h+=renderResolution();
+  m.innerHTML=h;
+}
+
+function renderMilPhase(){
+  let h=`<div class="phase-label" style="color:var(--red)">Phase 1 of 3 — Military</div><div class="phase-title">Military orders</div><div class="phase-desc">Choose one posture for this week. Forces deploy immediately.</div><div class="mil-grid">`;
+  MIL.forEach(o=>{
+    const sel=G.ch.mil===o.id;
+    h+=`<div class="mil-card ${sel?'sel':''}" onclick="pick('mil','${o.id}')"><div class="mc-icon">${o.ic}</div><div class="mc-name">${o.n}</div><div class="mc-desc">${o.d}</div>${o.cost?`<div class="mc-cost">${o.cost>0?'+':''}$${Math.abs(o.cost)}M/week</div>`:''}<div class="mc-bar" style="background:${sel?o.bar:'transparent'}"></div></div>`;
+  });
+  h+=`</div><div style="margin-top:16px;display:flex;gap:8px"><button class="next-btn" onclick="nextPhase()">Continue to diplomacy →</button><button class="skip-btn" onclick="pick('mil',null);nextPhase()">Skip</button></div>`;
+  return h;
+}
+
+function renderDipPhase(){
+  let h=`<div class="phase-label" style="color:var(--teal)">Phase 2 of 3 — Diplomatic</div><div class="phase-title">Diplomatic channels</div><div class="phase-desc">Select one diplomatic action. Back-channels take time but build leverage.</div><div class="dip-list">`;
+  DIP.forEach(o=>{
+    const sel=G.ch.dip===o.id;
+    h+=`<div class="dip-row ${sel?'sel':''}" onclick="pick('dip','${o.id}')"><div class="dip-wire">${sel?'✓':'○'}</div><div><div class="dr-name">${o.n}</div><div class="dr-desc">${o.d}</div></div><span class="dr-tag" style="background:${sel?'rgba(38,198,218,0.1)':'rgba(255,255,255,0.03)'};color:${o.tc||'var(--t3)'}">${o.tag}</span></div>`;
+  });
+  h+=`</div><div style="margin-top:16px;display:flex;gap:8px"><button class="next-btn" style="background:var(--teal)" onclick="nextPhase()">Continue to covert ops →</button><button class="skip-btn" onclick="pick('dip',null);nextPhase()">Skip</button></div>`;
+  return h;
+}
+
+function renderCovPhase(){
+  let h=`<div class="phase-label" style="color:var(--pur)">Phase 3 of 3 — Covert / Economic</div><div class="phase-title">Covert operations</div><div class="phase-desc">Select one covert or economic action. Effects are deniable but cumulative.</div><div class="cov-wrap"><div class="cov-header">Classified options menu — select one</div>`;
+  COV.forEach(o=>{
+    const sel=G.ch.cov===o.id;
+    h+=`<div class="cov-item ${sel?'sel':''}" onclick="pick('cov','${o.id}')"><div class="cov-radio"></div><div><div class="ci-name">${o.n}</div><div class="ci-desc">${o.d}</div></div>${o.cost?`<div class="ci-cost">$${o.cost}M</div>`:''}</div>`;
+  });
+  h+=`</div><div style="margin-top:16px"><button class="next-btn" style="background:var(--pur)" onclick="executeTurn()">Execute all orders →</button></div>`;
+  return h;
+}
+
+function renderResolution(){
+  let h=`<div class="phase-label" style="color:var(--amb)">Resolution — Week ${G.week-1} results</div><div class="phase-title">What happened</div><div class="res-events">`;
+  G.events.forEach((e,i)=>{
+    h+=`<div class="res-ev" style="background:${e.bg};border-color:${e.bc};animation-delay:${i*0.12}s"><div class="re-dot" style="background:${e.c}"></div><p style="color:${e.c}">${e.text}</p></div>`;
+  });
+  if(G.over){
+    const sc=calcScore();
+    const g=sc>=70?['Strategic success','var(--grn)','You contained the conflict and restored maritime traffic.']:sc>=40?['Partial outcome','var(--amb)','Mixed results — conflict managed but unresolved.']:['Strategic failure','var(--red)','Escalation beyond control. Catastrophic economic consequences.'];
+    h+=`</div><div class="end-card" style="border-color:${g[1]}"><h2 style="color:${g[1]}">${g[0]}</h2><p>${g[2]}</p><div class="end-stats">
+      <div class="end-stat"><div class="esv" style="color:var(--amb)">$${(G.cost/1000).toFixed(1)}B</div><div class="esl">Total cost</div></div>
+      <div class="end-stat"><div class="esv">${G.turns}</div><div class="esl">Weeks</div></div>
+      <div class="end-stat"><div class="esv">$${Math.round(G.oil)}</div><div class="esl">Oil price</div></div>
+      <div class="end-stat"><div class="esv">${Math.round(G.hormuz)}%</div><div class="esl">Hormuz</div></div>
+      <div class="end-stat"><div class="esv">${Math.round(G.bab)}%</div><div class="esl">Bab el-Mandeb</div></div>
+      <div class="end-stat"><div class="esv" style="color:${g[1]}">${sc}/100</div><div class="esl">Score</div></div>
+    </div><button class="restart-btn" onclick="restart()">Play again</button></div>`;
+  } else {
+    h+=`</div><button class="next-btn" onclick="startNextWeek()">Begin Week ${G.week} →</button>`;
+  }
+  return h;
+}
+
+function pick(domain, id){ G.ch[domain]=id; renderPhase(); }
+function nextPhase(){ G.phase++; renderPhase(); }
+
+function executeTurn(){
+  G.turns++; G.week++; G.events=[];
+  const mil=MIL.find(o=>o.id===G.ch.mil)||{};
+  const dip=DIP.find(o=>o.id===G.ch.dip)||{};
+  const cov=COV.find(o=>o.id===G.ch.cov)||{};
+
+  [mil,dip,cov].forEach(o=>{if(!o.id)return;
+    G.oil=Math.max(60,G.oil+(o.oil||0));G.cost+=(o.cost||0);G.esc=clamp(G.esc+(o.esc||0),1,10);
+    G.hormuz=clamp(G.hormuz+(o.hormuz||0),0,100);G.bab=clamp(G.bab+(o.bab||0),0,100);
+    G.ho=clamp(G.ho+(o.ho||0),0,100);G.ir=clamp(G.ir+(o.ir||0),0,100);
+    G.coal=clamp(G.coal+(o.coal||0),0,100);G.dip=clamp(G.dip+(o.dip||0),0,100);
+    G.vls=clamp(G.vls+(o.vls||0),0,100);G.sa=clamp(G.sa+(o.sa||0),0,100);
+    G.us=clamp(G.us+(o.us||0),0,100);G.rec=clamp(G.rec+(o.rec||0),0,100);
+  });
+
+  if(mil.id)addEv(`Military: ${mil.n}`,'rgba(239,83,80,0.05)','rgba(239,83,80,0.15)','var(--red)');
+  if(dip.id&&dip.id!=='none_d')addEv(`Diplomacy: ${dip.n}`,'rgba(38,198,218,0.04)','rgba(38,198,218,0.12)','var(--teal)');
+  if(cov.id&&cov.id!=='none_c')addEv(`Covert: ${cov.n}`,'rgba(156,123,234,0.04)','rgba(156,123,234,0.12)','var(--pur)');
+
+  resolveWorld();
+  G.log.push({w:G.week-1,mil:mil.n||'—',dip:dip.n||'—',cov:cov.n||'—'});
+  checkEnd();
+  G.phase=3;
+  renderPhase(); renderSide(); updateTop();
+}
+
+function resolveWorld(){
+  const hAgg=Math.max(0,G.ho-30)/100;
+  const wk=Math.min(1,G.turns/8);
+  if(Math.random()<hAgg*wk*0.7){
+    G.bab=clamp(G.bab-Math.round(8+Math.random()*12),0,100);
+    G.oil+=Math.round(5+Math.random()*10);G.esc=clamp(G.esc+1,1,10);
+    addEv('Houthis attack Red Sea shipping — Bab el-Mandeb traffic drops','rgba(239,83,80,0.06)','rgba(239,83,80,0.2)','var(--red)');
+  } else if(G.ho>40&&Math.random()<0.4){
+    addEv('Houthis fire missiles at Israel — intercepted by Iron Dome','rgba(239,83,80,0.03)','rgba(239,83,80,0.1)','var(--t2)');
+  }
+  if(G.ir>15&&Math.random()<G.ir/100*0.5){
+    G.hormuz=clamp(G.hormuz-Math.round(3+Math.random()*5),0,100);
+    addEv('IRGC drone strikes near Hormuz — insurance rates hold elevated','rgba(239,83,80,0.04)','rgba(239,83,80,0.12)','var(--red)');
+  } else if(G.hormuz<30&&G.ir<20){
+    G.hormuz=clamp(G.hormuz+Math.round(5+Math.random()*8),0,100);
+    addEv('Hormuz traffic slowly recovers as Iranian capability degrades','rgba(76,175,80,0.04)','rgba(76,175,80,0.12)','var(--grn)');
+  }
+  if(G.hz>20&&Math.random()<0.3){G.il=clamp(G.il-2,0,100);addEv('Hezbollah exchanges fire with IDF in southern Lebanon','rgba(156,123,234,0.03)','rgba(156,123,234,0.1)','var(--t2)');}
+  if(G.hormuz<20)G.oil=Math.max(G.oil,100);
+  if(G.bab<50)G.oil+=Math.round((50-G.bab)*0.3);
+  if(G.bab<30&&G.hormuz<30){G.oil=Math.max(G.oil,150);G.rec=clamp(G.rec+8,0,100);addEv('DUAL CHOKEPOINT CRISIS — both straits effectively closed','rgba(239,83,80,0.08)','rgba(239,83,80,0.25)','var(--red)');}
+  G.rec=clamp(Math.round(G.rec+(G.oil>130?3:G.oil>110?1:-1)),0,100);
+  G.hz=clamp(G.hz-1,0,100);G.ir=clamp(G.ir-1,0,100);
+  if(G.bab>80)G.oil=Math.max(60,G.oil-2);
+}
+
+function addEv(text,bg,bc,c){G.events.push({text,bg,bc,c})}
+
+function checkEnd(){
+  if(G.turns>=10)G.over=true;
+  if(G.bab<15&&G.hormuz<15)G.over=true;
+  if(G.rec>=90)G.over=true;
+  if(G.hormuz>70&&G.bab>80&&G.esc<=4){addEv('Conflict de-escalating — shipping restored, ceasefire framework emerging','rgba(76,175,80,0.06)','rgba(76,175,80,0.2)','var(--grn)');G.over=true;}
+}
+
+function calcScore(){
+  let s=50;s+=(G.hormuz-5)*0.3;s+=(G.bab-85)*0.4;s-=Math.max(0,G.oil-110)*0.3;
+  s+=(G.coal-50)*0.2;s+=(G.dip-30)*0.2;s-=G.rec*0.3;s-=Math.max(0,G.esc-8)*5;s-=Math.max(0,(G.cost-6200)/100);
+  return clamp(Math.round(s),0,100);
+}
+
+function startNextWeek(){G.phase=0;G.ch={mil:null,dip:null,cov:null};G.events=[];renderPhase();renderSide();updateTop();}
+
+function updateTop(){
+  document.getElementById('t-week').textContent=`W${G.week} — ${DATES[G.turns]||'Jun+'}`;
+  document.getElementById('t-oil').textContent='$'+Math.round(G.oil);
+  const hs=G.hormuz>50?['var(--grn)','Reopening']:G.hormuz>20?['var(--amb)','Partial']:['var(--red)','Closed'];
+  const bs=G.bab>70?['var(--grn)','Open']:G.bab>40?['var(--amb)','Disrupted']:['var(--red)','Critical'];
+  document.getElementById('pd-horm').style.background=hs[0];document.getElementById('pt-horm').textContent='Hormuz: '+hs[1];
+  document.getElementById('pd-bab').style.background=bs[0];document.getElementById('pt-bab').textContent='Bab el-Mandeb: '+bs[1];
+}
+
+function renderSide(){
+  const e=document.getElementById('gside');
+  const esc=G.esc*10,ecol=G.esc>7?'var(--red)':G.esc>4?'var(--amb)':'var(--grn)';
+  const es=G.esc<=4&&G.bab>60?['eb-g','Favorable']:G.esc<=7&&G.bab>40?['eb-a','Contested']:['eb-r','Critical'];
+  e.innerHTML=`
+  <div class="sg"><div class="sg-title">Situation</div>
+  <div class="sg-row"><span>Escalation</span><span class="sv" style="color:${ecol}">${G.esc}/10</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${esc}%;background:${ecol}"></div></div>
+  <div class="sg-row"><span>Oil price</span><span class="sv" style="color:${G.oil>130?'var(--red)':G.oil>110?'var(--amb)':'var(--t)'}">$${Math.round(G.oil)}</span></div>
+  <div class="sg-row"><span>US cost</span><span class="sv" style="color:var(--amb)">$${(G.cost/1000).toFixed(1)}B</span></div>
+  <div class="sg-row"><span>Recession risk</span><span class="sv">${Math.round(G.rec)}%</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${G.rec}%;background:${G.rec>60?'var(--red)':'var(--amb)'}"></div></div></div>
+  <div class="sg"><div class="sg-title">Chokepoints</div>
+  <div class="sg-row"><span>Hormuz</span><span class="sv">${Math.round(G.hormuz)}%</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${G.hormuz}%;background:${G.hormuz>50?'var(--grn)':G.hormuz>20?'var(--amb)':'var(--red)'}"></div></div>
+  <div class="sg-row"><span>Bab el-Mandeb</span><span class="sv">${Math.round(G.bab)}%</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${G.bab}%;background:${G.bab>70?'var(--grn)':G.bab>40?'var(--amb)':'var(--red)'}"></div></div></div>
+  <div class="sg"><div class="sg-title">Actors</div>
+  ${actorBar('US forces',G.us,'var(--acc)')}${actorBar('Israel',G.il,'var(--acc)')}${actorBar('Iran',G.ir,'var(--red)')}${actorBar('Houthis',G.ho,'var(--red)')}${actorBar('Hezbollah',G.hz,'var(--pur)')}${actorBar('Saudi',G.sa,'var(--amb)')}</div>
+  <div class="sg"><div class="sg-title">Resources</div>
+  <div class="sg-row"><span>Coalition</span><span class="sv">${Math.round(G.coal)}%</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${G.coal}%;background:${G.coal>50?'var(--acc)':'var(--amb)'}"></div></div>
+  <div class="sg-row"><span>Diplomacy</span><span class="sv">${Math.round(G.dip)}%</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${G.dip}%;background:${G.dip>40?'var(--teal)':'var(--amb)'}"></div></div>
+  <div class="sg-row"><span>VLS cells</span><span class="sv">${Math.round(G.vls)}%</span></div><div class="sg-bar"><div class="sg-bar-fill" style="width:${G.vls}%;background:${G.vls>40?'var(--acc)':'var(--red)'}"></div></div></div>
+  <div class="endstate-badge ${es[0]}">${es[1]}</div>
+  <div class="sg" style="margin-top:10px"><div class="sg-title">Event log</div><div class="ev-log" id="evlog">${G.log.map(l=>`<div class="el-entry"><span class="el-w">W${l.w}</span><span>${l.mil}</span></div>`).join('')}</div></div>
+  <button class="restart-btn" onclick="restart()" style="margin-top:8px">Restart</button>`;
+}
+
+function actorBar(name,val,col){return `<div class="actor-mini"><span class="am-name">${name}</span><div class="am-bar"><div class="am-fill" style="width:${clamp(val,0,100)}%;background:${col}"></div></div><span class="am-val">${Math.round(val)}%</span></div>`;}
+
+function restart(){
+  Object.assign(G,{week:5,oil:110,cost:6200,esc:8,rec:35,hormuz:5,bab:85,us:85,il:75,ir:25,ho:60,hz:40,sa:70,coal:50,dip:30,vls:62,phase:0,ch:{mil:null,dip:null,cov:null},log:[],events:[],turns:0,over:false});
+  show('scr-game');renderPhase();renderSide();updateTop();
+}
+</script>
+</body>
+</html>

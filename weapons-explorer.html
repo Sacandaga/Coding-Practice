@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weapons Systems Explorer — Red Sea / Iran Theater</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06080d;--bg2:#0c1018;--bg3:#121a28;--card:#151d2e;--card-h:#1a2540;--border:#1e2b40;--border-h:#2a3f5c;--text:#d8dee9;--text2:#8898aa;--text3:#4e5d6e;--accent:#4793e0;--accent2:#2dd4bf;--red:#f87171;--amber:#fbbf24;--green:#34d399;--purple:#a78bfa;--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;min-height:100vh}
+::selection{background:rgba(71,147,224,0.3)}
+.container{max-width:1200px;margin:0 auto;padding:0 32px}
+
+header{padding:48px 0 32px;border-bottom:1px solid var(--border)}
+.eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+h1{font-family:var(--serif);font-size:clamp(28px,4vw,44px);font-weight:400;color:#fff;margin-bottom:8px}
+h1 em{font-style:italic;color:var(--accent)}
+.lead{font-size:15px;color:var(--text2);max-width:700px}
+
+.tabs{display:flex;gap:2px;margin:32px 0 24px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--sans)}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+.systems-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:32px}
+.sys-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden}
+.sys-card:hover{border-color:var(--border-h);transform:translateY(-2px);background:var(--card-h)}
+.sys-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 32px rgba(71,147,224,0.15)}
+.sys-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;opacity:0;transition:opacity 0.25s}
+.sys-card:hover::before,.sys-card.selected::before{opacity:1}
+.sys-role{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;margin-bottom:8px;padding:2px 8px;border-radius:4px;display:inline-block}
+.role-strike{background:rgba(248,113,113,0.1);color:var(--red)}.role-strike+.sys-card::before,.sys-card:has(.role-strike)::before{background:var(--red)}
+.role-defense{background:rgba(71,147,224,0.1);color:var(--accent)}.sys-card:has(.role-defense)::before{background:var(--accent)}
+.role-isr{background:rgba(45,212,191,0.1);color:var(--accent2)}.sys-card:has(.role-isr)::before{background:var(--accent2)}
+.role-platform{background:rgba(167,139,250,0.1);color:var(--purple)}.sys-card:has(.role-platform)::before{background:var(--purple)}
+.role-sead{background:rgba(251,191,36,0.1);color:var(--amber)}.sys-card:has(.role-sead)::before{background:var(--amber)}
+.sys-name{font-family:var(--serif);font-size:18px;color:#fff;margin-bottom:2px}
+.sys-subtitle{font-size:12px;color:var(--text3);margin-bottom:12px}
+.sys-cost{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--amber)}
+.sys-stat{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px}
+
+.detail-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:32px;overflow:hidden;display:none}
+.detail-panel.open{display:block;animation:slideDown 0.3s ease-out}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.detail-header{display:flex;align-items:center;justify-content:space-between;padding:24px 32px;border-bottom:1px solid var(--border)}
+.detail-header h2{font-family:var(--serif);font-size:24px;color:#fff;font-weight:400}
+.detail-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.detail-close:hover{border-color:var(--red);color:var(--red)}
+.detail-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.detail-specs{padding:24px 32px;border-right:1px solid var(--border)}
+.detail-context{padding:24px 32px}
+.spec-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(30,43,64,0.5);font-size:13px}
+.spec-row .label{color:var(--text3)}
+.spec-row .val{font-family:var(--mono);color:var(--text);font-weight:500;text-align:right}
+.detail-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:16px}
+.detail-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.dtag{font-size:11px;padding:3px 10px;border-radius:6px;background:rgba(71,147,224,0.08);color:var(--accent)}
+
+.map-section{margin-bottom:32px}
+.map-section h2{font-family:var(--serif);font-size:22px;color:#fff;font-weight:400;margin-bottom:4px}
+.map-section .sub{font-size:13px;color:var(--text3);margin-bottom:16px}
+.map-container{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative}
+.map-controls{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:10}
+.map-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:rgba(6,8,13,0.85);color:var(--text3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;backdrop-filter:blur(8px)}
+.map-btn:hover{border-color:var(--accent);color:var(--accent)}
+.map-legend{position:absolute;bottom:16px;left:16px;background:rgba(6,8,13,0.9);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:11px;backdrop-filter:blur(8px);z-index:10}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+
+.calc-section{margin-bottom:48px}
+.calc-grid{display:grid;grid-template-columns:1fr 340px;gap:20px}
+.calc-items{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px}
+.calc-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(30,43,64,0.4)}
+.calc-item:last-child{border-bottom:none}
+.calc-item label{flex:1;font-size:13px;color:var(--text2)}
+.calc-item .unit-cost{font-family:var(--mono);font-size:12px;color:var(--text3);min-width:80px;text-align:right}
+.calc-item input[type=number]{width:64px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:13px;padding:6px 8px;text-align:center}
+.calc-item input:focus{outline:none;border-color:var(--accent)}
+.calc-summary{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;position:sticky;top:24px}
+.calc-total{font-size:32px;font-weight:600;font-family:var(--mono);color:#fff;margin:8px 0 4px}
+.calc-comparison{font-size:13px;color:var(--text3);margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.comp-bar{height:6px;border-radius:3px;margin:8px 0 4px;position:relative;background:var(--bg)}
+.comp-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+
+.cost-chart{margin:24px 0;position:relative;height:300px}
+
+footer{padding:32px 0;border-top:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.6;margin-top:40px}
+
+@media(max-width:768px){
+.container{padding:0 20px}
+.detail-body{grid-template-columns:1fr}
+.detail-specs{border-right:none;border-bottom:1px solid var(--border)}
+.calc-grid{grid-template-columns:1fr}
+.systems-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){.systems-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="eyebrow">Session 1 — Interactive weapons systems explorer</div>
+<h1>U.S. strike & defense <em>architecture</em></h1>
+<p class="lead">Click any platform to see specs, range geometry on the theater map, and cost-per-engagement data. Build a strike package and watch the cost ratio update in real time.</p>
+</header>
+
+<div class="tabs">
+<button class="tab active" onclick="filterSystems('all')">All systems</button>
+<button class="tab" onclick="filterSystems('strike')">Offensive strike</button>
+<button class="tab" onclick="filterSystems('defense')">Defensive</button>
+<button class="tab" onclick="filterSystems('isr')">ISR / UAS</button>
+<button class="tab" onclick="filterSystems('platform')">Platforms</button>
+<button class="tab" onclick="filterSystems('sead')">SEAD / EW</button>
+</div>
+
+<div class="systems-grid" id="systems-grid"></div>
+<div class="detail-panel" id="detail-panel"></div>
+
+<div class="map-section">
+<h2>Theater map — range geometry</h2>
+<p class="sub">Select a weapon system above to see its range ring from an illustrative DDG launch position in the southern Red Sea. All ranges approximate.</p>
+<div class="map-container">
+<svg id="theater-map" viewBox="0 0 800 500" width="100%" style="display:block">
+<defs>
+<radialGradient id="rg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#4793e0" stop-opacity="0.15"/><stop offset="100%" stop-color="#4793e0" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="800" height="500" fill="#080e1a"/>
+<path d="M200 20 L220 60 L260 80 L280 120 L300 140 L310 180 L320 200 L340 240 L350 260 L360 280 L365 300 L340 340 L320 360 L300 380 L290 400 L280 420 L270 440 L265 460 L260 500" fill="none" stroke="#1e2b40" stroke-width="1.5" stroke-dasharray="4 3"/>
+<path d="M0 100 Q60 90 120 100 Q180 120 220 160 Q250 190 260 220 Q270 260 260 300 Q240 350 200 380 Q160 400 120 420 Q80 440 40 460 L0 480" fill="#0f1a12" stroke="#1a3020" stroke-width="0.5" opacity="0.7"/>
+<path d="M350 0 Q400 40 420 80 Q440 120 450 160 Q460 200 465 240 Q470 280 460 320 Q450 360 430 400 Q410 440 400 480 L400 500 L800 500 L800 0 Z" fill="#0f1a12" stroke="#1a3020" stroke-width="0.5" opacity="0.5"/>
+<path d="M540 0 Q560 60 580 120 Q600 200 620 280 Q630 320 640 360 Q650 400 660 440 L660 500 L800 500 L800 0 Z" fill="#12200f" stroke="#1a3020" stroke-width="0.5" opacity="0.4"/>
+<text x="100" y="300" fill="#1e2b40" font-size="14" font-family="DM Sans" font-weight="500" transform="rotate(-70,100,300)">RED SEA</text>
+<text x="440" y="100" fill="#1a3020" font-size="11" font-family="DM Sans" font-weight="500">SAUDI ARABIA</text>
+<text x="620" y="200" fill="#1a3020" font-size="11" font-family="DM Sans" font-weight="500">OMAN</text>
+<text x="300" y="240" fill="#1a3020" font-size="10" font-family="DM Sans">YEMEN</text>
+<text x="60" y="180" fill="#1e2b40" font-size="9" font-family="DM Sans">ERITREA</text>
+<text x="140" y="460" fill="#1e2b40" font-size="9" font-family="DM Sans">DJIBOUTI</text>
+<text x="260" y="480" fill="#1e2b40" font-size="8" font-family="DM Sans">BAB EL-MANDEB</text>
+<circle cx="330" cy="220" r="4" fill="#f87171" opacity="0.8"/><text x="338" y="224" fill="#f87171" font-size="8" font-family="DM Mono">Sana'a</text>
+<circle cx="290" cy="280" r="3" fill="#f87171" opacity="0.6"/><text x="298" y="284" fill="#f87171" font-size="8" font-family="DM Mono">Hodeidah</text>
+<circle cx="360" cy="180" r="3" fill="#f87171" opacity="0.5"/><text x="368" y="184" fill="#f87171" font-size="8" font-family="DM Mono">Sa'dah</text>
+<circle cx="400" cy="300" r="3" fill="#fbbf24" opacity="0.5"/><text x="408" y="304" fill="#fbbf24" font-size="8" font-family="DM Mono">Marib</text>
+<g id="range-ring" opacity="0" style="transition:opacity 0.5s">
+<circle cx="180" cy="380" r="0" fill="url(#rg)" stroke="#4793e0" stroke-width="1" stroke-dasharray="6 3" opacity="0.6" id="range-circle"/>
+<text x="180" y="374" text-anchor="middle" fill="#4793e0" font-size="9" font-family="DM Mono" id="range-label"></text>
+</g>
+<g id="ddg-icon">
+<rect x="170" y="374" width="20" height="12" rx="3" fill="none" stroke="#4793e0" stroke-width="1.5"/>
+<text x="180" y="398" text-anchor="middle" fill="#4793e0" font-size="7" font-family="DM Mono">DDG</text>
+</g>
+<g id="strike-line" opacity="0" style="transition:opacity 0.4s">
+<line x1="180" y1="380" x2="330" y2="220" stroke="#f87171" stroke-width="1" stroke-dasharray="4 2" id="s-line"/>
+<text x="255" y="295" fill="#f87171" font-size="8" font-family="DM Mono" id="s-dist" transform="rotate(-30,255,295)"></text>
+</g>
+</svg>
+<div class="map-legend">
+<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>U.S. naval position (illustrative)</div>
+<div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Target locations</div>
+<div class="legend-item"><div class="legend-dot" style="border:1.5px dashed var(--accent);background:none"></div>Weapon range ring</div>
+</div>
+</div>
+</div>
+
+<div class="calc-section">
+<h2 style="font-family:var(--serif);font-size:22px;color:#fff;font-weight:400;margin-bottom:4px">Strike package calculator</h2>
+<p style="font-size:13px;color:var(--text3);margin-bottom:16px">Build a hypothetical strike package. The cost ratio vs. Houthi arsenal updates in real time.</p>
+<div class="calc-grid">
+<div class="calc-items" id="calc-items"></div>
+<div class="calc-summary">
+<div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Strike package cost</div>
+<div class="calc-total" id="calc-total">$0</div>
+<div style="font-size:12px;color:var(--text3)">Equivalent Houthi drones at $30K each:</div>
+<div style="font-size:20px;font-weight:500;font-family:var(--mono);color:var(--amber);margin:4px 0" id="drone-equiv">0 drones</div>
+<div class="calc-comparison">
+<div style="font-size:12px;margin-bottom:4px">US package vs. Houthi monthly attack cost ($10.4M)</div>
+<div class="comp-bar"><div class="comp-fill" id="comp-us" style="width:0%;background:var(--accent)"></div></div>
+<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3)"><span>$0</span><span id="comp-us-label">$0</span></div>
+<div class="comp-bar" style="margin-top:8px"><div class="comp-fill" style="width:100%;background:var(--red)"></div></div>
+<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3)"><span>$0</span><span>$10.4M (Houthi monthly)</span></div>
+</div>
+<div style="margin-top:16px;padding:12px;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:8px">
+<div style="font-size:12px;color:var(--red);font-weight:500" id="ratio-display">Cost ratio: —</div>
+</div>
+<div style="margin-top:12px">
+<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Quick presets:</div>
+<button onclick="loadPreset('phase1')" style="font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;margin:2px;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Phase I strike (Days 1-14)</button>
+<button onclick="loadPreset('sead')" style="font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;margin:2px;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">SEAD package</button>
+<button onclick="loadPreset('defense')" style="font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;margin:2px;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Monthly defense</button>
+<button onclick="loadPreset('clear')" style="font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;margin:2px;font-family:var(--sans);transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Clear all</button>
+</div>
+</div>
+</div>
+</div>
+
+<div style="margin-bottom:48px">
+<h2 style="font-family:var(--serif);font-size:22px;color:#fff;font-weight:400;margin-bottom:4px">Cost asymmetry — the central problem</h2>
+<p style="font-size:13px;color:var(--text3);margin-bottom:16px">Why a purely defensive posture is financially untenable.</p>
+<div class="cost-chart"><canvas id="costChart"></canvas></div>
+</div>
+
+<footer>
+<p>All cost data is unclassified FY2025 estimates from open sources. Platform specifications from public technical references. Theater map positions are illustrative — not current operational data. This is a simulation/training product for academic/educational purposes.</p>
+<p style="margin-top:6px">AI assistance: Claude Opus 4.6, Anthropic.</p>
+</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const W = [
+{id:'tomahawk',name:'BGM-109 Tomahawk',sub:'Land Attack Cruise Missile (TLAM)',role:'strike',cat:'Precision munition',cost:2500000,costLabel:'$2.5M/unit',range_mi:1550,range_km:2494,specs:{Manufacturer:'Raytheon Technologies',Range:'1,550 miles (Block IV)',Speed:'Mach 0.72 (~550 mph)',Guidance:'GPS/INS + TERCOM + DSMAC',Warhead:'WDU-36 (1,000 lb unitary)',Platform:'DDG-51, SSN/SSGN, CG-47',CEP:'<10 meters','Unit cost':'~$2.5 million',Status:'Currently deployed'},desc:'Primary standoff strike weapon for opening salvos against fixed targets. GPS/INS with terrain-following (TERCOM) and scene-matching (DSMAC) terminal guidance enables precision strikes on missile storage, port infrastructure, and C2 nodes. Launched from Mk-41 VLS (90 cells per DDG). Essential for Phase I strikes on Hodeidah and Sa\'dah targets.',tags:['Standoff strike','Phase I','Anti-infrastructure','DDG-launched'],mapRange:200,preset:{phase1:50,sead:0,defense:0}},
+{id:'sm6',name:'SM-6 / RIM-174',sub:'Standard Extended Range Active Missile',role:'defense',cat:'Interceptor',cost:4300000,costLabel:'$4.3M/unit',range_mi:130,range_km:209,specs:{Manufacturer:'Raytheon Technologies',Range:'130+ nautical miles',Altitude:'Exo-atmospheric capable',Targets:'BM / ASCM / fixed-wing / TBM',Guidance:'Semi-active + active terminal','Kill mechanism':'Hit-to-kill + blast-frag',Platform:'Mk-41 VLS (DDG-51/CG-47)','Unit cost':'~$4.3 million',Status:'Active defense in theater'},desc:'Primary interceptor for Houthi ballistic missiles and anti-ship cruise missiles. The $4.3M per-unit cost vs. a $20K-$50K Houthi drone creates the 86-215x cost asymmetry that is the central strategic vulnerability of the defensive posture. Each DDG carries 90-96 VLS cells shared between SM-6 defensive and Tomahawk offensive loads.',tags:['Missile defense','Cost asymmetry','CSG protection','Aegis'],mapRange:100,preset:{phase1:0,sead:0,defense:60}},
+{id:'superhornet',name:'F/A-18E/F Super Hornet',sub:'Carrier-Based Strike Fighter',role:'strike',cat:'Aircraft',cost:70000000,costLabel:'$70M/unit',range_mi:1275,range_km:2052,specs:{Manufacturer:'Boeing',Range:'1,275 miles combat radius',Speed:'Mach 1.8+',Payload:'17,750 lbs external stores',Armament:'JDAM / AIM-120 / Harpoon','GBU-38 cost':'~$25,000 per JDAM',Crew:'1 (E) or 2 (F)','Unit cost':'~$70 million',Platform:'CVN-78 / CVN-77 embarked'},desc:'Carrier-based precision strike fighter delivering JDAMs and SDBs against Category A-C targets. JDAM cost ($25K/round) makes it the most cost-efficient kinetic option per target destroyed. Requires SEAD support from EA-18G Growler before operating over Houthi air defense envelopes (S-75, Buk-M2).',tags:['Precision strike','JDAM delivery','CAP','Carrier-based'],mapRange:170,preset:{phase1:12,sead:4,defense:0}},
+{id:'growler',name:'EA-18G Growler',sub:'Electronic Attack Aircraft',role:'sead',cat:'Aircraft',cost:67000000,costLabel:'$67M/unit',range_mi:1100,range_km:1770,specs:{Manufacturer:'Boeing',System:'AN/ALQ-99 jamming pods',Role:'SEAD / Electronic warfare',Armament:'AGM-88 HARM anti-radiation',Capability:'Suppresses SAM and radar',Coverage:'Houthi S-75, Buk-M2',Crew:'2','Unit cost':'~$67 million',Platform:'CVN-78 / CVN-77 embarked'},desc:'Essential SEAD platform. Suppresses Houthi air defense radars (S-75, Buk-M2) with AN/ALQ-99 jamming and AGM-88 HARM anti-radiation missiles, enabling safe passage for F/A-18E/F strike packages. Must be deployed before any manned aircraft operate over Houthi territory. Pilot survivability depends on Growler effectiveness.',tags:['SEAD','Electronic warfare','Jamming','Pilot survivability'],mapRange:140,preset:{phase1:4,sead:6,defense:0}},
+{id:'b52',name:'B-52H Stratofortress',sub:'Long-Range Strategic Bomber',role:'strike',cat:'Aircraft',cost:72000000,costLabel:'$72M/unit',range_mi:8800,range_km:14160,specs:{Manufacturer:'Boeing',Range:'8,800 miles (unrefueled)',Ceiling:'50,000 ft',Payload:'70,000 lbs conventional',Armament:'AGM-158 JASSM / JDAM / Mk-82','JASSM range':'230+ miles standoff','JASSM cost':'~$1.1M/round',Crew:'5 (pilot, co-pilot, 3 WSOs)',Base:'Diego Garcia / CONUS'},desc:'Long-range strategic strike platform delivering AGM-158 JASSM standoff missiles from beyond Houthi air defense range. 230+ mile JASSM standoff eliminates the need for SEAD support. Sortied from Diego Garcia or CONUS with aerial refueling. 70,000 lb payload enables mass strikes against dispersed targets.',tags:['Strategic strike','JASSM','Standoff','Diego Garcia'],mapRange:280,preset:{phase1:2,sead:0,defense:0}},
+{id:'b2',name:'B-2A Spirit',sub:'Stealth Strategic Bomber',role:'strike',cat:'Aircraft',cost:2100000000,costLabel:'$2.1B/unit',range_mi:6000,range_km:9656,specs:{Manufacturer:'Northrop Grumman',Range:'6,000 miles',Stealth:'Low-observable (VLO)',Payload:'40,000 lbs','Primary weapon':'GBU-57 MOP (30,000 lb)',Capability:'Only platform for MOP',Fleet:'~20 aircraft total','Unit cost':'~$2.1 billion',Base:'Whiteman AFB / Diego Garcia'},desc:'The ONLY platform capable of delivering the GBU-57 Massive Ordnance Penetrator against hardened/buried Houthi missile storage bunkers in Sa\'dah. At 30,000 lbs, the MOP can penetrate 200+ feet of earth or reinforced concrete. Low-observable stealth enables unescorted penetration without SEAD. ~20 aircraft in the entire fleet — an irreplaceable and finite national asset.',tags:['Bunker buster','MOP','Stealth','Sa\'dah bunkers'],mapRange:280,preset:{phase1:1,sead:0,defense:0}},
+{id:'reaper',name:'MQ-9 Reaper',sub:'Unmanned Combat Aerial Vehicle',role:'isr',cat:'UAS',cost:32000000,costLabel:'$32M/unit',sortie_cost:64000,range_mi:1150,range_km:1850,specs:{Manufacturer:'General Atomics',Endurance:'27+ hours',Ceiling:'50,000 ft',Payload:'3,800 lbs (external stores)',Armament:'AGM-114 Hellfire / GBU-12',Sensors:'MTS-B electro-optical/IR',Crew:'Remote pilot + sensor operator','Sortie cost':'~$64,000','Hellfire cost':'$150K/round'},desc:'Persistent ISR and precision strike UAS. 27+ hour endurance makes it ideal for tracking mobile missile launchers (TELs) and providing pattern-of-life intelligence for HVT targeting. AGM-114 Hellfire enables immediate strikes on time-sensitive targets. 7 MQ-9s lost during Operation Rough Rider — demonstrating Houthi air defense capability against slow-moving UAS.',tags:['ISR','Persistent overwatch','TEL tracking','HVT targeting'],mapRange:150,preset:{phase1:6,sead:0,defense:0}},
+{id:'sm2',name:'SM-2 / RIM-66',sub:'Standard Missile 2',role:'defense',cat:'Interceptor',cost:2000000,costLabel:'$2.0M/unit',range_mi:90,range_km:145,specs:{Manufacturer:'Raytheon',Range:'90 nautical miles',Targets:'Subsonic cruise missiles',Guidance:'Semi-active radar homing',Platform:'Mk-41 VLS (DDG-51)',Role:'Medium-range layer','Unit cost':'~$2.0 million',Status:'Active defense'},desc:'Medium-range interceptor providing the second layer of CSG missile defense. Engages subsonic cruise missiles that penetrate the SM-6 outer defense ring. Layered with SM-6 for area defense of carrier strike group. Lower cost than SM-6 but limited to subsonic targets.',tags:['Layered defense','Anti-cruise missile','CSG protection'],mapRange:70,preset:{phase1:0,sead:0,defense:40}},
+{id:'pac3',name:'Patriot PAC-3 MSE',sub:'Theater Ballistic Missile Defense',role:'defense',cat:'Ground-based',cost:5900000,costLabel:'$5.9M/interceptor',range_mi:22,range_km:35,specs:{Manufacturer:'Raytheon / Lockheed Martin',Range:'25-60 km (PAC-3 MSE)',Targets:'TBM / MRBM / aircraft / cruise','Kill mechanism':'Hit-to-kill (PAC-3) / frag (PAC-2)',Radar:'AN/MPQ-65 (360° phased array)','Battery cost':'~$1 billion',Deployment:'Saudi Arabia / UAE / Qatar','Interceptor cost':'~$5.9M (PAC-3 MSE)'},desc:'Terminal-phase ballistic missile defense deployed with Gulf partners. Hit-to-kill engagement of Houthi Burkan-2H MRBMs targeting Saudi Arabia, UAE, and Qatar. PAC-3 MSE variant extends range and altitude. Full battery costs ~$1B. Primary ground-based defense for U.S. forces and allied installations in the Gulf.',tags:['BMD','Terminal defense','Gulf partners','Ground-based'],mapRange:25,preset:{phase1:0,sead:0,defense:4}},
+{id:'ciws',name:'Phalanx CIWS',sub:'Close-In Weapon System',role:'defense',cat:'Ship defense',cost:11500000,costLabel:'$11.5M/installation',range_mi:1,range_km:1.5,specs:{Manufacturer:'Raytheon',Caliber:'20mm M61 Gatling',Rate:'4,500 rounds/min',Role:'Final-layer defense','Engagement range':'~1 nautical mile',Targets:'Inbound missiles, USVs',Tracking:'Ku-band radar',Cost:'~$11.5M/installation'},desc:'Last-ditch defense against inbound missiles and unmanned surface vehicles (USVs) that penetrate all outer defense layers. 20mm Gatling gun fires 4,500 rounds/minute in autonomous mode. Effective range is extremely short (~1 nm) — by the time CIWS engages, all other defensive options have failed. Mounted on every DDG and CVN.',tags:['Final layer','Point defense','Anti-USV','Autonomous'],mapRange:3,preset:{phase1:0,sead:0,defense:0}},
+{id:'ddg51',name:'DDG-51 Arleigh Burke',sub:'Guided Missile Destroyer',role:'platform',cat:'Surface combatant',cost:2100000000,costLabel:'$2.1B/hull',range_mi:4400,range_km:7100,specs:{Manufacturer:'HII / Bath Iron Works',Displacement:'9,700 tons',VLS:'90-96 Mk-41 cells',Weapons:'Tomahawk / SM-6 / SM-2 / ASROC',Radar:'AN/SPY-1 (BMD capable)',Speed:'30+ knots','Unit cost':'~$2.1 billion',Role:'Multi-mission: strike + defense'},desc:'The workhorse of the Red Sea campaign. 90-96 Mk-41 VLS cells carry a mix of Tomahawk offensive and SM-6/SM-2 defensive missiles — creating a constant tension between strike and defense loadout. AN/SPY-1 radar provides ballistic missile defense. Multiple Burkes operate under NAVCENT in the Red Sea. VLS depletion at current Houthi attack rates estimated at 30-45 days.',tags:['Multi-mission','VLS capacity','BMD','NAVCENT'],mapRange:0,preset:{phase1:0,sead:0,defense:0}},
+{id:'cvn78',name:'Gerald R. Ford CVN-78',sub:'Nuclear Aircraft Carrier',role:'platform',cat:'Capital ship',cost:13000000000,costLabel:'$13B/hull',range_mi:0,range_km:0,specs:{Manufacturer:'HII Newport News',Displacement:'100,000 tons',Air_wing:'70-90 embarked aircraft',Catapult:'EMALS electromagnetic',Reactors:'2x A1B nuclear',Speed:'30+ knots',Crew:'~4,500','Unit cost':'~$13 billion'},desc:'Centerpiece of the carrier strike group. Embarks 70-90 aircraft including F/A-18E/F strike fighters, EA-18G Growlers, E-2D Hawkeye AEW, and MH-60 helicopters. EMALS catapult increases sortie rate. Two CSGs assessed as sufficient for sustained campaign. Currently USS Gerald R. Ford is in Crete for repairs following the 2026 Iran War — its redeployment to the Red Sea is a key decision point.',tags:['Capital ship','Air wing','EMALS','CSG core'],mapRange:0,preset:{phase1:0,sead:0,defense:0}}
+];
+
+const grid = document.getElementById('systems-grid');
+const detailPanel = document.getElementById('detail-panel');
+let selectedSystem = null;
+
+function renderCards(filter) {
+  grid.innerHTML = '';
+  const filtered = filter === 'all' ? W : W.filter(w => w.role === filter);
+  filtered.forEach(w => {
+    const card = document.createElement('div');
+    card.className = 'sys-card' + (selectedSystem === w.id ? ' selected' : '');
+    card.onclick = () => selectSystem(w.id);
+    card.innerHTML = `<div class="sys-role role-${w.role}">${w.cat}</div><div class="sys-name">${w.name}</div><div class="sys-subtitle">${w.sub}</div><div class="sys-cost">${w.costLabel}</div><div class="sys-stat"><span>Range: ${w.range_mi > 0 ? w.range_mi.toLocaleString() + ' mi' : 'N/A'}</span><span>${w.role}</span></div>`;
+    grid.appendChild(card);
+  });
+}
+
+function selectSystem(id) {
+  selectedSystem = id;
+  const w = W.find(s => s.id === id);
+  renderCards(currentFilter);
+  const specRows = Object.entries(w.specs).map(([k,v]) => `<div class="spec-row"><span class="label">${k.replace(/_/g,' ')}</span><span class="val">${v}</span></div>`).join('');
+  const tagEls = w.tags.map(t => `<span class="dtag">${t}</span>`).join('');
+  detailPanel.innerHTML = `<div class="detail-header"><h2>${w.name}</h2><button class="detail-close" onclick="closeDetail()">✕</button></div><div class="detail-body"><div class="detail-specs">${specRows}</div><div class="detail-context"><div class="detail-desc">${w.desc}</div><div style="font-size:12px;color:var(--text3);margin-top:8px">Role tags:</div><div class="detail-tags">${tagEls}</div></div></div>`;
+  detailPanel.className = 'detail-panel open';
+  updateMap(w);
+  detailPanel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeDetail() {
+  detailPanel.className = 'detail-panel';
+  selectedSystem = null;
+  renderCards(currentFilter);
+  document.getElementById('range-ring').setAttribute('opacity','0');
+  document.getElementById('strike-line').setAttribute('opacity','0');
+}
+
+function updateMap(w) {
+  const ring = document.getElementById('range-ring');
+  const circle = document.getElementById('range-circle');
+  const label = document.getElementById('range-label');
+  const sLine = document.getElementById('strike-line');
+  if (w.mapRange > 0) {
+    const r = Math.min(w.mapRange, 280);
+    circle.setAttribute('r', r);
+    label.textContent = w.range_mi.toLocaleString() + ' mi';
+    ring.setAttribute('opacity', '1');
+    if (w.role === 'strike' || w.role === 'sead' || w.role === 'isr') {
+      sLine.setAttribute('opacity', '1');
+      document.getElementById('s-dist').textContent = '~' + Math.round(w.range_km * 0.15) + ' km to Sana\'a';
+    } else {
+      sLine.setAttribute('opacity', '0');
+    }
+  } else {
+    ring.setAttribute('opacity', '0');
+    sLine.setAttribute('opacity', '0');
+  }
+}
+
+let currentFilter = 'all';
+function filterSystems(f) {
+  currentFilter = f;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderCards(f);
+}
+
+const calcWeapons = [
+  {id:'tomahawk',name:'Tomahawk TLAM',cost:2500000,unit:'missiles'},
+  {id:'jdam',name:'JDAM (GBU-38)',cost:25000,unit:'bombs'},
+  {id:'jassm',name:'AGM-158 JASSM',cost:1100000,unit:'missiles'},
+  {id:'hellfire',name:'AGM-114 Hellfire',cost:150000,unit:'missiles'},
+  {id:'sm6',name:'SM-6 interceptor',cost:4300000,unit:'interceptors'},
+  {id:'sm2',name:'SM-2 interceptor',cost:2000000,unit:'interceptors'},
+  {id:'pac3',name:'PAC-3 MSE',cost:5900000,unit:'interceptors'},
+  {id:'harm',name:'AGM-88 HARM',cost:870000,unit:'missiles'},
+  {id:'sdb',name:'GBU-39 SDB',cost:40000,unit:'bombs'},
+  {id:'reaper_sortie',name:'MQ-9 Reaper sortie',cost:64000,unit:'sorties'},
+];
+
+const calcEl = document.getElementById('calc-items');
+calcWeapons.forEach(cw => {
+  const div = document.createElement('div');
+  div.className = 'calc-item';
+  div.innerHTML = `<label>${cw.name}</label><span class="unit-cost">${formatCost(cw.cost)}/${cw.unit.slice(0,-1)}</span><input type="number" id="calc-${cw.id}" value="0" min="0" max="999" onchange="updateCalc()" oninput="updateCalc()">`;
+  calcEl.appendChild(div);
+});
+
+function formatCost(n) {
+  if (n >= 1e9) return '$' + (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
+  return '$' + n;
+}
+
+function updateCalc() {
+  let total = 0;
+  calcWeapons.forEach(cw => {
+    const qty = parseInt(document.getElementById('calc-' + cw.id).value) || 0;
+    total += qty * cw.cost;
+  });
+  document.getElementById('calc-total').textContent = formatCost(total);
+  document.getElementById('drone-equiv').textContent = Math.round(total / 30000).toLocaleString() + ' drones';
+  const houthiMonthly = 10400000;
+  const pct = Math.min(100, (total / (houthiMonthly * 6)) * 100);
+  document.getElementById('comp-us').style.width = pct + '%';
+  document.getElementById('comp-us-label').textContent = formatCost(total);
+  if (total > 0 && total > houthiMonthly) {
+    document.getElementById('ratio-display').textContent = 'Cost ratio: ' + Math.round(total / houthiMonthly) + ':1 vs. Houthi monthly cost';
+  } else if (total > 0) {
+    document.getElementById('ratio-display').textContent = 'Package cost: ' + Math.round(total / houthiMonthly * 100) + '% of Houthi monthly';
+  } else {
+    document.getElementById('ratio-display').textContent = 'Cost ratio: —';
+  }
+}
+
+function loadPreset(name) {
+  calcWeapons.forEach(cw => { document.getElementById('calc-' + cw.id).value = 0; });
+  if (name === 'phase1') {
+    document.getElementById('calc-tomahawk').value = 50;
+    document.getElementById('calc-jdam').value = 120;
+    document.getElementById('calc-jassm').value = 16;
+    document.getElementById('calc-hellfire').value = 24;
+    document.getElementById('calc-harm').value = 12;
+    document.getElementById('calc-sdb').value = 60;
+    document.getElementById('calc-reaper_sortie').value = 30;
+  } else if (name === 'sead') {
+    document.getElementById('calc-tomahawk').value = 20;
+    document.getElementById('calc-harm').value = 24;
+    document.getElementById('calc-jdam').value = 40;
+  } else if (name === 'defense') {
+    document.getElementById('calc-sm6').value = 60;
+    document.getElementById('calc-sm2').value = 40;
+    document.getElementById('calc-pac3').value = 4;
+  }
+  updateCalc();
+}
+
+renderCards('all');
+updateCalc();
+
+new Chart(document.getElementById('costChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Tomahawk\nBGM-109','SM-6\nRIM-174','SM-2\nRIM-66','MQ-9\n(per sortie)','F/A-18E/F\n(unit)','B-52H\n(unit)','DDG-51\n(hull)','CVN-78\n(hull)','Houthi drone\n($30K)'],
+    datasets: [{
+      data: [2.5, 4.3, 2.0, 0.064, 70, 72, 2100, 13000, 0.03],
+      backgroundColor: ['#f87171','#4793e0','#4793e0','#2dd4bf','#f87171','#f87171','#a78bfa','#a78bfa','#fbbf24'],
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: {
+      legend: {display: false},
+      title: {display: true, text: 'Unit costs comparison ($ millions, log scale)', color: '#d8dee9', font: {size: 14, weight: '500', family: 'DM Sans'}},
+      tooltip: {callbacks: {label: ctx => formatCost(ctx.raw * 1e6)}}
+    },
+    scales: {
+      x: {type: 'logarithmic', min: 0.01, ticks: {color: '#4e5d6e', callback: v => formatCost(v * 1e6)}, grid: {color: 'rgba(255,255,255,0.03)'}},
+      y: {ticks: {color: '#8898aa', font: {size: 11, family: 'DM Mono'}}, grid: {display: false}}
+    }
+  }
+});
+</script>
+</body>
+</html>

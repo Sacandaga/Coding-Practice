@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Theater Map — Red Sea / Iran / Gulf Theater</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060a12;--card:#0d1420;--border:#1a2538;--text:#d0d8e4;--text2:#7a8a9e;--text3:#3d4f66;--accent:#4793e0;--red:#ef5350;--amber:#ffc107;--green:#4caf50;--teal:#26c6da;--purple:#ab47bc;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;height:100vh;display:flex;flex-direction:column}
+
+.toolbar{display:flex;align-items:center;gap:16px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--border);z-index:20;flex-shrink:0}
+.toolbar h1{font-size:14px;font-weight:500;white-space:nowrap}
+.toolbar .sep{width:1px;height:20px;background:var(--border)}
+.toolbar .status{font-size:11px;font-family:var(--mono);color:var(--text2)}
+.toolbar .status .dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px}
+
+.map-wrap{flex:1;position:relative;overflow:hidden;cursor:grab}
+.map-wrap:active{cursor:grabbing}
+.map-inner{transform-origin:0 0;transition:transform 0.1s ease-out;width:100%;height:100%}
+
+.layer-panel{position:absolute;top:12px;left:12px;background:rgba(13,20,32,0.92);border:1px solid var(--border);border-radius:12px;padding:16px;width:220px;z-index:15;backdrop-filter:blur(12px);max-height:calc(100vh - 120px);overflow-y:auto}
+.layer-panel h3{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.layer-item{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12px;color:var(--text2);transition:color 0.15s}
+.layer-item:hover{color:var(--text)}
+.layer-item input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+.layer-item .ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.layer-divider{height:1px;background:var(--border);margin:8px 0}
+
+.info-panel{position:absolute;top:12px;right:12px;background:rgba(13,20,32,0.95);border:1px solid var(--border);border-radius:12px;padding:20px;width:300px;z-index:15;backdrop-filter:blur(12px);display:none;max-height:calc(100vh - 120px);overflow-y:auto}
+.info-panel.open{display:block;animation:fadeIn 0.2s ease-out}
+.info-panel h3{font-size:16px;font-weight:500;color:#fff;margin-bottom:4px}
+.info-panel .info-sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+.info-panel .info-body{font-size:13px;color:var(--text2);line-height:1.6}
+.info-panel .info-close{position:absolute;top:12px;right:12px;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px}
+.info-panel .info-close:hover{border-color:var(--red);color:var(--red)}
+.info-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid rgba(26,37,56,0.5)}
+.info-row .ik{color:var(--text3)}.info-row .iv{color:var(--text);font-family:var(--mono)}
+.info-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;margin:2px;font-weight:500}
+
+.zoom-controls{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;z-index:15}
+.zoom-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:rgba(13,20,32,0.9);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all 0.15s}
+.zoom-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.legend-bar{position:absolute;bottom:12px;left:12px;background:rgba(13,20,32,0.9);border:1px solid var(--border);border-radius:10px;padding:10px 16px;z-index:15;display:flex;gap:16px;font-size:10px;backdrop-filter:blur(8px);flex-wrap:wrap}
+.legend-bar .li{display:flex;align-items:center;gap:5px;color:var(--text2)}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dashFlow{to{stroke-dashoffset:-40}}
+@keyframes pulse{0%,100%{r:4;opacity:0.8}50%{r:7;opacity:0.3}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+svg text{font-family:'DM Sans',sans-serif}
+.anim-flow{animation:dashFlow 2s linear infinite}
+.anim-pulse{animation:pulse 2s ease-in-out infinite}
+.anim-blink{animation:blink 1.5s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+<h1>Theater map — Red Sea / Iran / Gulf</h1>
+<div class="sep"></div>
+<div class="status"><span class="dot" style="background:var(--red)"></span>Hormuz: CLOSED</div>
+<div class="status"><span class="dot" style="background:var(--amber)"></span>Bab el-Mandeb: THREATENED</div>
+<div class="status"><span class="dot" style="background:var(--green)"></span>Suez: REDUCED</div>
+<div class="sep"></div>
+<div class="status" style="margin-left:auto">March 31, 2026 — Day 31 | Illustrative training map</div>
+</div>
+
+<div class="map-wrap" id="mapWrap">
+<div class="map-inner" id="mapInner">
+<svg id="theaterSvg" viewBox="0 0 1200 750" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+<defs>
+<radialGradient id="rg1"><stop offset="0%" stop-color="#4793e0" stop-opacity="0.12"/><stop offset="100%" stop-color="#4793e0" stop-opacity="0"/></radialGradient>
+<radialGradient id="rg2"><stop offset="0%" stop-color="#ef5350" stop-opacity="0.2"/><stop offset="100%" stop-color="#ef5350" stop-opacity="0"/></radialGradient>
+<marker id="arw" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="8" markerHeight="6" orient="auto"><path d="M0 0L10 3L0 6" fill="context-stroke" opacity="0.7"/></marker>
+<filter id="glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<rect width="1200" height="750" fill="#060a12"/>
+
+<g id="layer-geo">
+<path d="M0 200 Q40 190 80 195 Q120 200 160 210 Q200 220 240 235 Q270 245 290 260 L310 280 Q320 310 310 340 Q300 370 280 400 Q260 430 240 450 Q220 460 200 470 Q170 480 140 490 L100 500 Q60 510 20 520 L0 530 Z" fill="#0a160e" stroke="#14291a" stroke-width="0.5"/>
+<path d="M0 0 L350 0 L350 40 Q340 60 330 80 Q310 120 300 160 Q290 190 285 210 L280 230 Q270 245 260 260 L0 260 Z" fill="#0a160e" stroke="#14291a" stroke-width="0.5"/>
+<text x="100" y="170" fill="#14291a" font-size="12" font-weight="500">EGYPT</text>
+<text x="60" y="460" fill="#14291a" font-size="10">SUDAN</text>
+<text x="120" y="550" fill="#14291a" font-size="9">ERITREA</text>
+<text x="180" y="670" fill="#14291a" font-size="9">DJIBOUTI</text>
+<text x="280" y="720" fill="#14291a" font-size="10">SOMALIA</text>
+
+<path d="M480 0 L1200 0 L1200 320 Q1150 330 1100 340 Q1050 345 1000 340 Q950 335 900 340 Q870 345 850 360 Q830 380 810 400 Q790 420 770 440 Q750 460 730 470 Q710 480 690 485 Q660 490 630 488 Q600 485 580 475 Q560 465 540 450 Q520 430 510 420 Q500 410 495 400 L490 385 Q485 370 480 350 L475 320 Q475 280 480 240 Q485 200 490 160 Q490 120 485 80 Q480 40 480 0 Z" fill="#0a160e" stroke="#14291a" stroke-width="0.5"/>
+<text x="650" y="140" fill="#14291a" font-size="14" font-weight="500">SAUDI ARABIA</text>
+<text x="490" y="250" fill="#14291a" font-size="10">YEMEN</text>
+
+<path d="M850 0 Q870 20 890 40 Q920 70 950 90 Q990 110 1030 120 Q1070 125 1100 120 Q1130 115 1150 100 Q1180 80 1200 60 L1200 0 Z" fill="#120a0a" stroke="#291a1a" stroke-width="0.5"/>
+<text x="990" y="60" fill="#2a1414" font-size="13" font-weight="500">IRAN</text>
+
+<text x="700" y="60" fill="#14291a" font-size="10">Persian Gulf</text>
+
+<path d="M1080 100 Q1100 120 1120 150 Q1140 190 1150 230 Q1160 270 1155 300 Q1150 320 1140 340 L1200 340 L1200 100 Z" fill="#0a160e" stroke="#14291a" stroke-width="0.5"/>
+<text x="1140" y="220" fill="#14291a" font-size="8" transform="rotate(70,1140,220)">OMAN</text>
+
+<text x="200" y="380" fill="#0d2040" font-size="16" font-weight="300" transform="rotate(-75,200,380)" opacity="0.4">RED SEA</text>
+<text x="500" y="600" fill="#0d2040" font-size="12" font-weight="300" opacity="0.3">GULF OF ADEN</text>
+<text x="900" y="500" fill="#0d2040" font-size="12" font-weight="300" opacity="0.3">ARABIAN SEA</text>
+</g>
+
+<g id="layer-shipping">
+<path d="M280 100 Q290 150 295 200 Q300 250 305 300 Q310 350 300 400 Q285 450 270 500 Q255 550 240 600 Q230 640 220 680" fill="none" stroke="#1a3050" stroke-width="3" stroke-dasharray="8 4" opacity="0.4"/>
+<text x="250" y="320" fill="#1a3050" font-size="8" transform="rotate(-80,250,320)">Global shipping lane</text>
+<path d="M220 680 Q280 690 350 700 Q450 710 550 700 Q650 690 750 680 Q850 660 950 640" fill="none" stroke="#1a3050" stroke-width="2" stroke-dasharray="6 3" opacity="0.3"/>
+</g>
+
+<g id="layer-chokepoints">
+<g class="chokepoint" data-id="hormuz" style="cursor:pointer" onclick="showInfo('hormuz')">
+<circle cx="1020" cy="110" r="20" fill="none" stroke="var(--red)" stroke-width="2" class="anim-blink"/>
+<line x1="1010" y1="100" x2="1030" y2="120" stroke="var(--red)" stroke-width="3"/>
+<line x1="1030" y1="100" x2="1010" y2="120" stroke="var(--red)" stroke-width="3"/>
+<text x="1020" y="145" text-anchor="middle" fill="var(--red)" font-size="10" font-weight="600">HORMUZ</text>
+<text x="1020" y="157" text-anchor="middle" fill="var(--red)" font-size="8">CLOSED</text>
+</g>
+<g class="chokepoint" data-id="bab" style="cursor:pointer" onclick="showInfo('bab')">
+<circle cx="230" cy="660" r="16" fill="none" stroke="var(--amber)" stroke-width="2" class="anim-blink"/>
+<text x="230" y="664" text-anchor="middle" fill="var(--amber)" font-size="14" font-weight="600">!</text>
+<text x="230" y="690" text-anchor="middle" fill="var(--amber)" font-size="9" font-weight="500">BAB EL-MANDEB</text>
+<text x="230" y="701" text-anchor="middle" fill="var(--amber)" font-size="7">THREATENED</text>
+</g>
+<g class="chokepoint" data-id="suez" style="cursor:pointer" onclick="showInfo('suez')">
+<circle cx="300" cy="80" r="12" fill="none" stroke="var(--green)" stroke-width="1.5"/>
+<text x="300" y="84" text-anchor="middle" fill="var(--green)" font-size="10">S</text>
+<text x="320" y="78" fill="var(--green)" font-size="8">SUEZ</text>
+</g>
+</g>
+
+<g id="layer-naval">
+<g style="cursor:pointer" onclick="showInfo('ford')">
+<rect x="100" y="105" width="24" height="14" rx="4" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="106" y="102" width="12" height="3" rx="1" fill="var(--accent)" opacity="0.5"/>
+<text x="112" y="130" text-anchor="middle" fill="var(--accent)" font-size="7" font-family="var(--mono)">CVN-78 Ford</text>
+<text x="112" y="139" text-anchor="middle" fill="var(--text3)" font-size="6">(Crete — repairs)</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('truman')">
+<rect x="210" y="395" width="20" height="12" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<circle cx="220" cy="401" r="14" fill="url(#rg1)"/>
+<text x="220" y="420" text-anchor="middle" fill="var(--accent)" font-size="7" font-family="var(--mono)">CSG-8 Truman</text>
+<text x="220" y="429" text-anchor="middle" fill="var(--text3)" font-size="6">(Red Sea — on station)</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('ddg1')">
+<rect x="250" y="580" width="16" height="10" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.2"/>
+<text x="258" y="600" text-anchor="middle" fill="var(--accent)" font-size="6" font-family="var(--mono)">DDG Gravely</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('ddg2')">
+<rect x="290" y="530" width="16" height="10" rx="3" fill="none" stroke="var(--accent)" stroke-width="1.2"/>
+<text x="298" y="550" text-anchor="middle" fill="var(--accent)" font-size="6" font-family="var(--mono)">DDG Cole</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('djibouti')">
+<circle cx="195" cy="670" r="6" fill="none" stroke="var(--teal)" stroke-width="1.2"/>
+<text x="195" y="686" text-anchor="middle" fill="var(--teal)" font-size="6" font-family="var(--mono)">Camp Lemonnier</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('bahrain')">
+<circle cx="830" cy="55" r="6" fill="none" stroke="var(--accent)" stroke-width="1.2"/>
+<text x="830" y="45" text-anchor="middle" fill="var(--accent)" font-size="7" font-family="var(--mono)">5th Fleet HQ</text>
+<text x="830" y="36" text-anchor="middle" fill="var(--red)" font-size="6">(struck Mar 1)</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('aludeid')">
+<circle cx="870" cy="80" r="5" fill="none" stroke="var(--accent)" stroke-width="1"/>
+<text x="885" y="83" fill="var(--accent)" font-size="6" font-family="var(--mono)">Al Udeid AB</text>
+<text x="885" y="91" fill="var(--red)" font-size="5">(struck Mar 1)</text>
+</g>
+</g>
+
+<g id="layer-targets">
+<g style="cursor:pointer" onclick="showInfo('sanaa')">
+<circle cx="470" cy="290" r="6" fill="var(--red)" opacity="0.8"/>
+<circle cx="470" cy="290" r="12" fill="url(#rg2)"/>
+<text x="482" y="294" fill="var(--red)" font-size="8" font-weight="500">Sana'a</text>
+<text x="482" y="303" fill="var(--text3)" font-size="6">Cat A/B/D targets</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('hodeidah')">
+<circle cx="380" cy="370" r="5" fill="var(--red)" opacity="0.7"/>
+<circle cx="380" cy="370" r="10" fill="url(#rg2)"/>
+<text x="350" y="365" fill="var(--red)" font-size="8" font-weight="500" text-anchor="end">Hodeidah</text>
+<text x="350" y="374" fill="var(--text3)" font-size="6" text-anchor="end">Cat A/C — Iran weapons hub</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('sadah')">
+<circle cx="510" cy="220" r="5" fill="var(--red)" opacity="0.7"/>
+<text x="522" y="224" fill="var(--red)" font-size="8" font-weight="500">Sa'dah</text>
+<text x="522" y="233" fill="var(--text3)" font-size="6">Cat A — underground bunkers</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('saleef')">
+<circle cx="370" cy="340" r="4" fill="var(--amber)" opacity="0.6"/>
+<text x="345" y="335" fill="var(--amber)" font-size="7" text-anchor="end">Saleef</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('marib')">
+<circle cx="560" cy="320" r="4" fill="var(--amber)" opacity="0.5"/>
+<text x="572" y="324" fill="var(--amber)" font-size="7">Marib frontline</text>
+</g>
+<g style="cursor:pointer" onclick="showInfo('aden')">
+<circle cx="520" cy="430" r="3" fill="var(--green)" opacity="0.5"/>
+<text x="532" y="434" fill="var(--green)" font-size="7">Aden (IRG)</text>
+</g>
+</g>
+
+<g id="layer-strikes">
+<circle cx="220" cy="401" r="120" fill="none" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="6 4" opacity="0.3"/>
+<text x="220" y="290" text-anchor="middle" fill="var(--accent)" font-size="7" opacity="0.4" font-family="var(--mono)">Tomahawk range (1,550 mi)</text>
+<line x1="220" y1="401" x2="380" y2="370" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="4 2" opacity="0.3" marker-end="url(#arw)"/>
+<line x1="220" y1="401" x2="470" y2="290" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="4 2" opacity="0.3" marker-end="url(#arw)"/>
+<line x1="220" y1="401" x2="510" y2="220" stroke="var(--accent)" stroke-width="0.8" stroke-dasharray="4 2" opacity="0.3" marker-end="url(#arw)"/>
+</g>
+
+<g id="layer-attacks">
+<circle cx="265" cy="500" r="3" fill="var(--red)" opacity="0.5"/><circle cx="275" cy="520" r="3" fill="var(--red)" opacity="0.4"/>
+<circle cx="255" cy="540" r="4" fill="var(--red)" opacity="0.6"/><circle cx="280" cy="560" r="3" fill="var(--red)" opacity="0.5"/>
+<circle cx="260" cy="580" r="3" fill="var(--red)" opacity="0.4"/><circle cx="270" cy="600" r="4" fill="var(--red)" opacity="0.6"/>
+<circle cx="250" cy="610" r="3" fill="var(--red)" opacity="0.5"/><circle cx="285" cy="550" r="3" fill="var(--red)" opacity="0.4"/>
+<circle cx="240" cy="620" r="3" fill="var(--red)" opacity="0.5"/><circle cx="260" cy="640" r="4" fill="var(--red)" opacity="0.6"/>
+<circle cx="275" cy="490" r="3" fill="var(--red)" opacity="0.4"/><circle cx="290" cy="510" r="3" fill="var(--red)" opacity="0.5"/>
+<circle cx="245" cy="560" r="3" fill="var(--red)" opacity="0.3"/><circle cx="295" cy="540" r="2" fill="var(--red)" opacity="0.3"/>
+<text x="310" y="570" fill="var(--red)" font-size="7" opacity="0.5" font-family="var(--mono)">~100+ attack incidents</text>
+<text x="310" y="580" fill="var(--red)" font-size="7" opacity="0.5" font-family="var(--mono)">Nov 2023 — Oct 2025</text>
+</g>
+
+<g id="layer-houthi-vectors">
+<path d="M420 340 Q350 400 280 520" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="8 4" class="anim-flow" opacity="0.5" marker-end="url(#arw)"/>
+<path d="M450 310 Q400 350 320 500" fill="none" stroke="var(--red)" stroke-width="1" stroke-dasharray="6 4" class="anim-flow" opacity="0.3" style="animation-delay:-0.5s"/>
+<text x="340" y="440" fill="var(--red)" font-size="7" opacity="0.5" transform="rotate(-55,340,440)">Houthi drone/missile vectors</text>
+</g>
+
+<g id="layer-iran-supply">
+<path d="M1020 110 Q950 180 900 250 Q850 320 800 380 Q750 430 680 460 Q600 480 500 470 Q440 460 400 380" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-dasharray="6 6" class="anim-flow" opacity="0.4" style="animation-duration:4s"/>
+<text x="750" y="400" fill="var(--purple)" font-size="7" opacity="0.5">Iran weapons supply route</text>
+<text x="750" y="410" fill="var(--purple)" font-size="6" opacity="0.4">(Hormuz → Gulf of Aden → Hodeidah)</text>
+<text x="750" y="420" fill="var(--red)" font-size="6" opacity="0.5">STATUS: DISRUPTED by Hormuz closure</text>
+</g>
+
+<g id="layer-yanbu">
+<circle cx="520" cy="170" r="5" fill="var(--amber)" opacity="0.6"/>
+<text x="535" y="174" fill="var(--amber)" font-size="8" font-weight="500">Yanbu</text>
+<text x="535" y="183" fill="var(--text3)" font-size="6">Saudi oil reroute terminal</text>
+<path d="M520 170 Q480 220 440 300 Q400 400 350 500 Q300 580 250 650" fill="none" stroke="var(--amber)" stroke-width="2" stroke-dasharray="8 4" class="anim-flow" opacity="0.4" style="animation-duration:3s"/>
+<text x="380" y="480" fill="var(--amber)" font-size="7" opacity="0.5" transform="rotate(-60,380,480)">Saudi oil → Red Sea → Bab el-Mandeb</text>
+</g>
+
+<g id="layer-iran-targets">
+<circle cx="950" cy="45" r="5" fill="var(--red)" opacity="0.6" class="anim-pulse" style="cursor:pointer" onclick="showInfo('tehran')"/>
+<text x="960" y="42" fill="var(--red)" font-size="8" font-weight="500">Tehran</text>
+<text x="960" y="51" fill="var(--text3)" font-size="6">Under sustained strikes</text>
+<circle cx="1050" cy="85" r="4" fill="var(--red)" opacity="0.5" style="cursor:pointer" onclick="showInfo('bandar')"/>
+<text x="1060" y="82" fill="var(--red)" font-size="7">Bandar Abbas</text>
+<circle cx="980" cy="90" r="4" fill="var(--amber)" opacity="0.5"/>
+<text x="990" y="93" fill="var(--amber)" font-size="7">Kharg Is.</text>
+<text x="990" y="101" fill="var(--text3)" font-size="5">Oil hub (struck Mar 19)</text>
+</g>
+
+</svg>
+</div>
+
+<div class="layer-panel">
+<h3>Map layers</h3>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-geo')"><span class="ldot" style="background:#14291a"></span>Geography</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-shipping')"><span class="ldot" style="background:#1a3050"></span>Shipping lanes</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-chokepoints')"><span class="ldot" style="background:var(--amber)"></span>Chokepoint status</label>
+<div class="layer-divider"></div>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-naval')"><span class="ldot" style="background:var(--accent)"></span>U.S. naval positions</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-targets')"><span class="ldot" style="background:var(--red)"></span>Houthi/Yemen targets</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-iran-targets')"><span class="ldot" style="background:var(--red);opacity:0.6"></span>Iran targets</label>
+<div class="layer-divider"></div>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-strikes')"><span class="ldot" style="border:1.5px dashed var(--accent);background:none"></span>Strike arcs (Tomahawk)</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-attacks')"><span class="ldot" style="background:var(--red);opacity:0.5"></span>Attack incidents (2023-25)</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-houthi-vectors')"><span class="ldot" style="background:var(--red)"></span>Houthi attack vectors</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-iran-supply')"><span class="ldot" style="background:var(--purple)"></span>Iran supply route</label>
+<label class="layer-item"><input type="checkbox" checked onchange="toggleLayer('layer-yanbu')"><span class="ldot" style="background:var(--amber)"></span>Saudi oil reroute</label>
+</div>
+
+<div class="info-panel" id="infoPanel">
+<button class="info-close" onclick="closeInfo()">✕</button>
+<h3 id="infoTitle"></h3>
+<div class="info-sub" id="infoSub"></div>
+<div class="info-body" id="infoBody"></div>
+</div>
+
+<div class="zoom-controls">
+<button class="zoom-btn" onclick="zoomMap(1.3)">+</button>
+<button class="zoom-btn" onclick="zoomMap(0.77)">−</button>
+<button class="zoom-btn" onclick="resetZoom()" style="font-size:11px">⟲</button>
+</div>
+
+<div class="legend-bar">
+<span class="li"><span class="ldot" style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span>U.S. Navy</span>
+<span class="li"><span class="ldot" style="width:6px;height:6px;border-radius:50%;background:var(--red)"></span>Targets / attacks</span>
+<span class="li"><span class="ldot" style="width:6px;height:6px;border-radius:50%;background:var(--amber)"></span>Chokepoints / oil</span>
+<span class="li"><span class="ldot" style="width:6px;height:6px;border-radius:50%;background:var(--purple)"></span>Iran supply</span>
+<span class="li"><span class="ldot" style="width:6px;height:6px;border-radius:50%;background:var(--teal)"></span>U.S. bases</span>
+<span class="li" style="margin-left:auto;color:var(--text3);font-size:9px">SIMULATION / TRAINING USE ONLY</span>
+</div>
+</div>
+
+<script>
+const infoData = {
+  hormuz: {title:'Strait of Hormuz',sub:'STATUS: CLOSED since March 4, 2026',body:`<div class="info-row"><span class="ik">Width</span><span class="iv">21 miles (34 km)</span></div><div class="info-row"><span class="ik">Oil flow (normal)</span><span class="iv">20M bbl/day</span></div><div class="info-row"><span class="ik">Global oil share</span><span class="iv">~20%</span></div><div class="info-row"><span class="ik">Current traffic</span><span class="iv">Near zero</span></div><div class="info-row"><span class="ik">Closed by</span><span class="iv">IRGC drone strikes</span></div><div class="info-row"><span class="ik">Closure type</span><span class="iv">Insurance-driven halt</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Iran achieved effective closure through cheap drone strikes on commercial vessels — not a traditional naval blockade. Shipping companies and insurers halted transits voluntarily. On March 19, the US began military operations to reopen the strait. IRGCN commander Tangsiri was killed March 26. The strait remains effectively closed as of March 31.</div><div style="margin-top:8px"><span class="info-tag" style="background:rgba(239,83,80,0.12);color:var(--red)">Critical chokepoint</span><span class="info-tag" style="background:rgba(239,83,80,0.12);color:var(--red)">Closed</span></div>`},
+  bab: {title:'Bab el-Mandeb Strait',sub:'STATUS: THREATENED — Houthi capability intact',body:`<div class="info-row"><span class="ik">Width</span><span class="iv">20 miles (32 km)</span></div><div class="info-row"><span class="ik">Oil flow</span><span class="iv">~6.2M bbl/day</span></div><div class="info-row"><span class="ik">Container share</span><span class="iv">~25% of global</span></div><div class="info-row"><span class="ik">Saudi reroute</span><span class="iv">Active via Yanbu</span></div><div class="info-row"><span class="ik">Houthi attacks</span><span class="iv">100+ (Nov 23-Oct 25)</span></div><div class="info-row"><span class="ik">Current status</span><span class="iv">Open but threatened</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">With Hormuz closed, Bab el-Mandeb is now the only viable corridor for Gulf energy exports via Saudi Arabia's Yanbu pipeline reroute. The Houthis attacked 100+ vessels here from Nov 2023-Oct 2025, demonstrating proven capability. On March 28, 2026, Houthis resumed attacks on Israel and signaled that "closing Bab el-Mandeb is among our options." A dual closure would remove 30%+ of global seaborne oil.</div><div style="margin-top:8px"><span class="info-tag" style="background:rgba(255,193,7,0.12);color:var(--amber)">Threatened</span><span class="info-tag" style="background:rgba(255,193,7,0.12);color:var(--amber)">Critical reroute</span></div>`},
+  suez: {title:'Suez Canal',sub:'STATUS: Reduced traffic — upstream disruption',body:`<div class="info-row"><span class="ik">Normal traffic</span><span class="iv">~74 ships/week</span></div><div class="info-row"><span class="ik">Current</span><span class="iv">~40-50 ships/week</span></div><div class="info-row"><span class="ik">Revenue impact</span><span class="iv">Egypt losing ~$5B/yr</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Suez Canal traffic partially recovered from the 2024 lows (~35/week) after the Houthi ceasefire in May 2025, but remains below pre-crisis levels. The 2026 Iran War has introduced new uncertainty — if Bab el-Mandeb is disrupted again, Suez traffic will collapse as vessels reroute around Africa.</div>`},
+  sanaa: {title:"Sana'a — Houthi Capital",sub:'Target Categories A, B, D — Multiple target types',body:`<div class="info-row"><span class="ik">Cat A</span><span class="iv">Missile storage, assembly</span></div><div class="info-row"><span class="ik">Cat B</span><span class="iv">C2 nodes, comms</span></div><div class="info-row"><span class="ik">Cat D</span><span class="iv">HVT personnel</span></div><div class="info-row"><span class="ik">Key strike</span><span class="iv">Aug 28, 2025 — cabinet killed</span></div><div class="info-row"><span class="ik">Defenses</span><span class="iv">S-75, Buk-M2 SAMs</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">The Houthi political and military capital. Site of the August 2025 Israeli strike that killed PM al-Rahawi and most of the cabinet. Senior leadership has since dispersed to rural areas in northern Yemen. Houthi air defenses around Sana'a include Soviet-era S-75 and more capable Buk-M2 systems — requiring SEAD suppression before manned strike packages.</div>`},
+  hodeidah: {title:'Hodeidah Port',sub:'Category A/C — Primary Iran weapons import hub',body:`<div class="info-row"><span class="ik">Function</span><span class="iv">Iran weapons import</span></div><div class="info-row"><span class="ik">Civilian role</span><span class="iv">70% of Yemen food imports</span></div><div class="info-row"><span class="ik">Target type</span><span class="iv">Cranes, fuel, marshaling</span></div><div class="info-row"><span class="ik">Risk</span><span class="iv">Civilian harm — HIGH</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Primary Iranian weapons import hub through which missile guidance components, UAV parts, and engines enter Houthi-controlled territory. However, the port also handles 70% of Yemen's food imports — making any strike a humanitarian and legal minefield requiring extensive LOAC review and civilian harm mitigation. Israeli strikes damaged the port in July and December 2025.</div>`},
+  sadah: {title:"Sa'dah Governorate",sub:'Category A — Underground missile bunkers',body:`<div class="info-row"><span class="ik">Target type</span><span class="iv">Hardened/buried storage</span></div><div class="info-row"><span class="ik">Weapons</span><span class="iv">Burkan-2H, Quds-1</span></div><div class="info-row"><span class="ik">Strike platform</span><span class="iv">B-2 (GBU-57 MOP only)</span></div><div class="info-row"><span class="ik">Depth</span><span class="iv">200+ ft underground</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Concentrated between 43°E-44°E / 16°N-17°N. Underground bunkers in Sa'dah require the GBU-57 Massive Ordnance Penetrator (30,000 lb) — deliverable ONLY by the B-2 Spirit stealth bomber. No other platform in the US or allied inventory can prosecute these targets. Approximately 250km north of Hodeidah, within Tomahawk range from the southern Red Sea.</div>`},
+  ford: {title:'USS Gerald R. Ford (CVN-78)',sub:'Carrier Strike Group — Currently in Crete for repairs',body:`<div class="info-row"><span class="ik">Class</span><span class="iv">Ford-class CVN</span></div><div class="info-row"><span class="ik">Air wing</span><span class="iv">70-90 aircraft</span></div><div class="info-row"><span class="ik">Status</span><span class="iv">In port — Crete</span></div><div class="info-row"><span class="ik">Unit cost</span><span class="iv">~$13 billion</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Flagship of the US carrier fleet. Currently in Crete for repairs following operations during the 2026 Iran War. Redeployment to the Red Sea is a key decision point — it would provide decisive air power for Bab el-Mandeb defense but would expose it to the same Houthi attacks that plagued USS Eisenhower (2024) and USS Truman (2025).</div>`},
+  truman: {title:'USS Harry S. Truman (CVN-75)',sub:'CSG-8 — On station in the Red Sea',body:`<div class="info-row"><span class="ik">Class</span><span class="iv">Nimitz-class CVN</span></div><div class="info-row"><span class="ik">Air wing</span><span class="iv">~70 aircraft</span></div><div class="info-row"><span class="ik">Status</span><span class="iv">On station</span></div><div class="info-row"><span class="ik">Role</span><span class="iv">Strike + air superiority</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Currently the primary US carrier in the Red Sea theater. During Operation Rough Rider (March-May 2025), Truman CSG conducted hundreds of strike sorties against Houthi targets. Tomahawk range ring shown represents the 1,550-mile reach of BGM-109 cruise missiles launched from accompanying DDGs.</div>`},
+  tehran: {title:'Tehran, Iran',sub:'Under sustained US-Israeli airstrikes since Feb 28',body:`<div class="info-row"><span class="ik">Status</span><span class="iv">Under active strikes</span></div><div class="info-row"><span class="ik">Key event</span><span class="iv">Khamenei killed Feb 28</span></div><div class="info-row"><span class="ik">Internet</span><span class="iv">Blacked out</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">Iranian capital under sustained bombardment since Operation Epic Fury began. Supreme Leader Khamenei was killed in the opening Israeli decapitation strike on February 28. Power outages, internet blackout, and continued US-Israeli strikes on military infrastructure. Mojtaba Khamenei designated as successor.</div>`},
+  bahrain: {title:'NSA Bahrain — 5th Fleet HQ',sub:'US Navy Fifth Fleet headquarters — struck March 1',body:`<div class="info-row"><span class="ik">Function</span><span class="iv">NAVCENT / 5th Fleet HQ</span></div><div class="info-row"><span class="ik">Struck</span><span class="iv">Iranian missile, Mar 1</span></div><div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.6">The nerve center of US naval operations in the Middle East. Struck by an Iranian ballistic missile on March 1, 2026, as part of Iran's retaliatory strikes following Operation Epic Fury. The IRGC targeted four US bases across the Gulf.</div>`},
+  ddg1:{title:'USS Gravely (DDG-107)',sub:'Arleigh Burke-class DDG — Bab el-Mandeb patrol',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">Arleigh Burke-class guided missile destroyer on patrol near the Bab el-Mandeb strait. 90-96 Mk-41 VLS cells carrying a mix of Tomahawk offensive and SM-6/SM-2 defensive missiles. Position illustrative.</div>'},
+  ddg2:{title:'USS Cole (DDG-67)',sub:'Arleigh Burke-class DDG — Red Sea patrol',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">Arleigh Burke-class guided missile destroyer operating in the central Red Sea. The Cole has symbolic significance — it was the target of the October 2000 al-Qaeda attack in Aden harbor. Position illustrative.</div>'},
+  djibouti:{title:'Camp Lemonnier, Djibouti',sub:'US Africa Command — primary regional base',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">The only permanent US military base in Africa. Hosts MQ-9 Reaper operations, special operations forces, and serves as the logistics hub for Red Sea and Gulf of Aden operations. Critical for ISR coverage of the Bab el-Mandeb approaches.</div>'},
+  aludeid:{title:'Al Udeid Air Base, Qatar',sub:'CENTCOM forward HQ — struck March 1',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">Primary US air operations hub in the Middle East. Hosts the Combined Air Operations Center (CAOC) that coordinates all theater air operations. Struck by Iranian missiles on March 1, 2026. Damage assessment ongoing but CAOC operations have continued.</div>'},
+  bandar:{title:'Bandar Abbas, Iran',sub:'Major Iranian naval base — Hormuz closure ops',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">Iran\'s largest naval base, located at the entrance to the Strait of Hormuz. Home port for IRGC Navy fast boats and the base from which Hormuz closure operations are directed. An Iranian warship (Soleimani-class corvette) was sunk here by US-Israeli airstrike on March 1.</div>'},
+  saleef:{title:'Saleef Port',sub:'Secondary Iran weapons import point',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">Secondary port facility north of Hodeidah used for Iranian weapons transfers. Smaller than Hodeidah but still a significant logistics node. Targeted in Israeli strikes in September and December 2025.</div>'},
+  marib:{title:'Marib Frontline',sub:'Active civil war front — Houthi vs. IRG',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">The most active front in the Yemeni civil war. Houthi forces have been attempting to capture Marib — the last major government-held city in northern Yemen — since 2020. The frontline has been largely frozen since 2022 but remains a significant drain on Houthi military resources.</div>'},
+  aden:{title:'Aden',sub:'Seat of internationally recognized government',body:'<div style="font-size:12px;color:var(--text2);line-height:1.6">De facto capital of the internationally recognized Yemeni government (Presidential Leadership Council). Also the base of the Southern Transitional Council (STC), which seeks southern independence. The STC threat may be diverting Houthi attention from external operations — a key variable in the decision calculus.</div>'},
+};
+
+function showInfo(id) {
+  const d = infoData[id];
+  if (!d) return;
+  document.getElementById('infoTitle').textContent = d.title;
+  document.getElementById('infoSub').textContent = d.sub;
+  document.getElementById('infoBody').innerHTML = d.body;
+  document.getElementById('infoPanel').className = 'info-panel open';
+}
+function closeInfo() { document.getElementById('infoPanel').className = 'info-panel'; }
+function toggleLayer(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+let scale = 1, panX = 0, panY = 0, dragging = false, lastX, lastY;
+const inner = document.getElementById('mapInner');
+function updateTransform() { inner.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`; }
+function zoomMap(f) { scale = Math.max(0.5, Math.min(4, scale * f)); updateTransform(); }
+function resetZoom() { scale = 1; panX = 0; panY = 0; updateTransform(); }
+
+const wrap = document.getElementById('mapWrap');
+wrap.addEventListener('mousedown', e => { if (e.target.closest('.layer-panel,.info-panel,.zoom-controls,.legend-bar')) return; dragging = true; lastX = e.clientX; lastY = e.clientY; });
+window.addEventListener('mousemove', e => { if (!dragging) return; panX += e.clientX - lastX; panY += e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; updateTransform(); });
+window.addEventListener('mouseup', () => { dragging = false; });
+wrap.addEventListener('wheel', e => { e.preventDefault(); zoomMap(e.deltaY < 0 ? 1.1 : 0.9); }, {passive: false});
+</script>
+</body>
+</html>
