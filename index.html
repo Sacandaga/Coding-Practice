@@ -1,242 +1,207 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>National Security Simulation — Project Portfolio</title>
-<meta name="description" content="Academic national security simulation: NSC decision-making during the 2025-2026 Houthi crisis and 2026 Iran War. Interactive dashboards, CJCS memos, CIA assessments, and strategic analysis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,800;1,6..72,400;1,6..72,600&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#06080d;--bg2:#0c1018;--bg3:#121a28;--card:#151d2e;--border:#1e2b40;--border-h:#2a3f5c;--text:#d8dee9;--text2:#8898aa;--text3:#4e5d6e;--accent:#4793e0;--accent2:#2dd4bf;--red:#f87171;--amber:#fbbf24;--green:#34d399;--purple:#a78bfa;--serif:'Instrument Serif',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
-::selection{background:rgba(71,147,224,0.3)}
-.noise{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0.03;z-index:999;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  :root{
+    --bg:#0a0e0c; --bg2:#0f1512; --panel:#121814; --line:#1f2a23;
+    --ink:#dde7df; --dim:#7b8a80; --mute:#4f5b54;
+    --amber:#ffb547; --red:#ff5a4d; --green:#7be38a; --phos:#9fffb0;
+    --serif:'Newsreader',Georgia,serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;background:
+    radial-gradient(ellipse at 15% -5%, rgba(255,181,71,.06), transparent 50%),
+    radial-gradient(ellipse at 95% 100%, rgba(255,90,77,.05), transparent 55%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+    z-index:0}
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:24px clamp(16px,3vw,40px) 80px}
 
-header{padding:80px 40px 60px;max-width:1100px;margin:0 auto;position:relative}
-header::before{content:'';position:absolute;top:0;left:40px;right:40px;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
-.eyebrow{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:24px}
-h1{font-family:var(--serif);font-size:clamp(36px,6vw,64px);font-weight:400;line-height:1.1;margin-bottom:20px;color:#fff}
-h1 em{font-style:italic;color:var(--accent)}
-.lead{font-size:17px;color:var(--text2);line-height:1.7;max-width:640px}
-.stats{display:flex;gap:32px;margin-top:24px;flex-wrap:wrap}
-.stat{font-family:var(--mono);font-size:13px;color:var(--text3)}
-.stat strong{color:var(--text);font-size:20px;display:block;margin-bottom:2px}
+  .stamp{display:flex;justify-content:space-between;align-items:center;
+    background:#101814;border:1px solid var(--line);color:var(--dim);
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    padding:8px 14px;margin-bottom:18px}
+  .stamp .dot{display:inline-block;width:7px;height:7px;background:var(--amber);border-radius:50%;margin-right:8px;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-.grid{max-width:1100px;margin:0 auto;padding:0 40px 24px;display:grid;gap:16px}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  header.h{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:30px 0 36px;margin-bottom:46px;position:relative}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:18px}
+  h1.title{font-size:clamp(40px,6.5vw,76px);font-weight:600;line-height:1.02;margin:0 0 18px;letter-spacing:-.018em;font-style:italic;max-width:920px}
+  h1.title em{font-style:normal;color:var(--phos)}
+  .sub{color:var(--dim);font-size:19px;max-width:780px;margin:0 0 28px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);max-width:780px}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stats .s{background:var(--panel);padding:14px 16px}
+  .stats .v{font-family:var(--mono);font-size:24px;font-weight:600;color:var(--ink);line-height:1.1}
+  .stats .l{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-top:4px}
 
-.section-label{max-width:1100px;margin:0 auto;padding:40px 40px 16px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:12px}
-.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+  h2.sec{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--amber);border-bottom:1px solid var(--line);padding-bottom:10px;margin:48px 0 22px;
+    display:flex;justify-content:space-between;align-items:end}
+  h2.sec span.n{color:var(--mute);font-weight:400}
 
-a.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 32px;position:relative;overflow:hidden;transition:all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);cursor:pointer;text-decoration:none;color:inherit;display:block}
-a.card:hover{border-color:var(--border-h);transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,0.35)}
-a.card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity 0.3s}
-a.card:hover::after{opacity:1}
-a.card[data-accent="blue"]::after{background:var(--accent)}
-a.card[data-accent="red"]::after{background:var(--red)}
-a.card[data-accent="green"]::after{background:var(--accent2)}
-a.card[data-accent="purple"]::after{background:var(--purple)}
-a.card[data-accent="amber"]::after{background:var(--amber)}
+  /* featured capstone */
+  a.feat{display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg,#0e1612 0%,#13201a 100%);
+    border:1px solid var(--line);border-left:3px solid var(--amber);padding:38px;position:relative;overflow:hidden;transition:.25s}
+  a.feat:hover{border-left-color:var(--phos);background:linear-gradient(135deg,#0f1813 0%,#152821 100%)}
+  a.feat::after{content:"V10";position:absolute;right:32px;top:24px;font-family:var(--mono);font-size:90px;font-weight:700;color:#172019;letter-spacing:-.04em;line-height:1;pointer-events:none}
+  a.feat .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:14px}
+  a.feat h3{font-size:34px;font-weight:600;font-style:italic;margin:0 0 10px;letter-spacing:-.01em;line-height:1.1}
+  a.feat h3 em{font-style:normal;color:var(--phos)}
+  a.feat p{color:var(--dim);font-size:16px;margin:10px 0 18px;max-width:680px;line-height:1.6}
+  a.feat .meta{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  a.feat .meta b{color:var(--ink);font-weight:500}
+  a.feat .arrow{display:inline-block;margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);border-bottom:1px solid var(--amber);padding-bottom:2px}
 
-.card-type{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:500;margin-bottom:10px;display:inline-block;padding:3px 10px;border-radius:6px}
-.type-interactive{background:rgba(45,212,191,0.1);color:var(--accent2)}
-.type-pdf{background:rgba(71,147,224,0.1);color:var(--accent)}
-.card-title{font-family:var(--serif);font-size:21px;font-weight:400;margin-bottom:6px;color:#fff;line-height:1.3}
-.card-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
-.card-meta{display:flex;gap:16px;font-size:11px;color:var(--text3);flex-wrap:wrap}
+  /* card grids */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:900px){.grid.three{grid-template-columns:1fr}}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--panel);
+    border:1px solid var(--line);padding:22px;transition:.18s;position:relative}
+  a.card:hover{border-color:#3a4a40;transform:translateY(-1px)}
+  a.card .cat{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:10px;display:block}
+  a.card h3{font-size:20px;font-weight:600;margin:0 0 8px;color:var(--ink);letter-spacing:-.005em}
+  a.card p{font-size:14px;color:var(--dim);margin:0 0 14px;line-height:1.55}
+  a.card .meta{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+  a.card.pdf{border-left:2px solid var(--amber)}
+  a.card.cia{border-left:2px solid var(--red)}
+  a.card.new::before{content:"NEW";position:absolute;top:14px;right:14px;background:var(--green);color:#06120a;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;padding:3px 7px}
 
-.card-featured{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:0}
-.card-featured .card-content{padding:36px 32px}
-.card-featured .card-visual{background:var(--bg3);border-left:1px solid var(--border);display:flex;align-items:center;justify-content:center;min-height:260px;position:relative;overflow:hidden}
+  /* about */
+  .about{background:var(--panel);border:1px solid var(--line);padding:30px}
+  .about h3{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 10px;font-weight:500}
+  .about p{color:var(--dim);font-size:14px;line-height:1.65;margin:0 0 14px}
+  .about p:last-child{margin-bottom:0}
+  .sources{font-family:var(--mono);font-size:11px;color:var(--mute);line-height:1.9}
 
-.about-section{max-width:1100px;margin:0 auto;padding:40px 40px 0}
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.about-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 32px}
-.about-card h3{font-family:var(--serif);font-size:18px;color:#fff;font-weight:400;margin-bottom:8px}
-.about-card p{font-size:13px;color:var(--text2);line-height:1.7}
-
-footer{max-width:1100px;margin:0 auto;padding:40px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.7;margin-top:40px}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-header,.card,.section-label,.about-card{animation:fadeUp 0.5s ease-out both}
-.card:nth-child(2){animation-delay:0.06s}.card:nth-child(3){animation-delay:0.12s}.card:nth-child(4){animation-delay:0.18s}
-
-.mini-chart{width:100%;height:100%;position:absolute;top:0;left:0;opacity:0.7}
-a.card:hover .mini-chart{opacity:1}
-
-@media(max-width:720px){
-header{padding:48px 24px 40px}
-h1{font-size:32px}
-.grid,.section-label,.about-section,footer{padding-left:24px;padding-right:24px}
-.grid-2,.grid-3{grid-template-columns:1fr}
-.card-featured{grid-template-columns:1fr}
-.card-featured .card-visual{min-height:180px;border-left:none;border-top:1px solid var(--border)}
-.about-grid{grid-template-columns:1fr}
-}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--mute);line-height:1.7}
+  footer a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line)}
+  footer a:hover{color:var(--amber)}
 </style>
 </head>
 <body>
-<div class="noise"></div>
+<div class="wrap">
 
-<header>
-<div class="eyebrow">Academic simulation project</div>
-<h1>National security <em>simulation</em> portfolio</h1>
-<p class="lead">An NSC principals-level simulation covering U.S. decision-making during the 2025–2026 Houthi Red Sea crisis and the 2026 Iran War — with interactive dashboards, programmatic intelligence graphics, and decision simulators.</p>
-<div class="stats">
-<div class="stat"><strong>5</strong>Interactive tools</div>
-<div class="stat"><strong>3</strong>PDF deliverables</div>
-<div class="stat"><strong>8</strong>Total products</div>
-<div class="stat"><strong>Mar 2026</strong>Current as of</div>
-</div>
-</header>
+  <div class="stamp">
+    <div><span class="dot"></span>Academic simulation portfolio · CJCS · CIA · Independent analyst</div>
+    <div>Updated 14 Mar 2026</div>
+  </div>
 
-<div class="section-label">Featured — capstone</div>
+  <header class="h">
+    <div class="eyebrow">National Security Simulation · NSC Principals-Level Decision Making</div>
+    <h1 class="title">Fifteen days into the war.<br>The <em>portfolio</em> at decision point.</h1>
+    <p class="sub">An NSC principals-level simulation covering U.S. decision-making during the 2025–2026 Houthi Red Sea crisis and the 2026 Iran War — with interactive dashboards, programmatic intelligence graphics, war-game simulators, and full briefing books from CJCS, CIA, and independent analyst perspectives.</p>
+    <div class="stats">
+      <div class="s"><div class="v">6</div><div class="l">Interactive tools</div></div>
+      <div class="s"><div class="v">4</div><div class="l">PDF deliverables</div></div>
+      <div class="s"><div class="v">10</div><div class="l">Total products</div></div>
+      <div class="s"><div class="v">V10</div><div class="l">Current revision</div></div>
+    </div>
+  </header>
 
-<div class="grid grid-2">
-<a href="war-game.html" class="card card-featured" data-accent="red" style="grid-column:1/-1">
-<div class="card-content">
-<span class="card-type type-interactive">War game simulator</span>
-<h2 class="card-title">Master war game — Iran theater, 2026</h2>
-<p class="card-desc">Turn-based strategic simulator. Command U.S. forces week-by-week across military, diplomatic, and covert domains. Six actors respond dynamically: Iran, Houthis, Hezbollah, Israel, Saudi Arabia. Track oil prices, chokepoint status, VLS depletion, coalition cohesion, recession risk, and escalation level in real time. Your choices cascade — there is no undo.</p>
-<div class="card-meta">
-<span>10-week campaign</span>
-<span>5 military + 5 diplomatic + 6 covert options per turn</span>
-<span>Endstate scoring</span>
-</div>
-</div>
-<div class="card-visual">
-<svg class="mini-chart" viewBox="0 0 400 260" preserveAspectRatio="none">
-<rect width="400" height="260" fill="none"/>
-<rect x="20" y="200" width="30" height="40" rx="2" fill="#ef5350" opacity="0.3"/>
-<rect x="60" y="160" width="30" height="80" rx="2" fill="#ef5350" opacity="0.4"/>
-<rect x="100" y="120" width="30" height="120" rx="2" fill="#ef5350" opacity="0.5"/>
-<rect x="140" y="90" width="30" height="150" rx="2" fill="#ef5350" opacity="0.6"/>
-<rect x="180" y="60" width="30" height="180" rx="2" fill="#ef5350" opacity="0.7"/>
-<rect x="220" y="100" width="30" height="140" rx="2" fill="#ffc107" opacity="0.5"/>
-<rect x="260" y="130" width="30" height="110" rx="2" fill="#ffc107" opacity="0.4"/>
-<rect x="300" y="150" width="30" height="90" rx="2" fill="#4caf50" opacity="0.4"/>
-<rect x="340" y="170" width="30" height="70" rx="2" fill="#4caf50" opacity="0.3"/>
-<text x="200" y="30" text-anchor="middle" fill="#3d4f66" font-size="10" font-family="DM Mono,monospace">ESCALATION TRAJECTORY</text>
-</svg>
-</div>
-</a>
-</div>
+  <h2 class="sec"><span>Featured · Capstone Briefing</span><span class="n">New for V10</span></h2>
+  <a class="feat" href="./v10-briefing.html">
+    <div class="tag">Day 15 · NSC Principals Meeting · 16 Mar 2026</div>
+    <h3>The Iran theater <em>at decision point</em></h3>
+    <p>Interactive Day-15 situation room from the V10 NSC briefing book. Theater status matrix, V8 prediction scorecard (6/6 confirmed), Iranian missile/oil/cost charts, three forward military options with the JCS recommendation, Houthi reentry calculus, 30/60/90-day forecasts, Hormuz escort cost breakdown, and LOAC concerns. Built directly from the V10 source.</p>
+    <div class="meta">
+      <div>Source <b>CJCS V10</b></div>
+      <div>Built <b>Mar 16, 2026</b></div>
+      <div>Charts <b>Chart.js · 4 panels</b></div>
+      <div>PDF <b>37 pages</b></div>
+    </div>
+    <div class="arrow">Open situation room →</div>
+  </a>
 
-<div class="section-label">Interactive tools</div>
+  <h2 class="sec"><span>Interactive tools</span><span class="n">5 simulators &amp; explorers</span></h2>
+  <div class="grid">
+    <a class="card" href="./war-game.html">
+      <span class="cat">War game simulator</span>
+      <h3>Master war game — Iran theater, 2026</h3>
+      <p>Turn-based strategic simulator. Command U.S. forces week-by-week across military, diplomatic, and covert domains. Six actors respond dynamically: Iran, Houthis, Hezbollah, Israel, Saudi Arabia. Track oil prices, chokepoint status, VLS depletion, coalition cohesion, recession risk, and escalation level in real time.</p>
+      <div class="meta"><div>10-week campaign</div><div>16 options/turn</div><div>Endstate scoring</div></div>
+    </a>
+    <a class="card" href="./dashboard.html">
+      <span class="cat">Strategic dashboard</span>
+      <h3>Strategic analysis: the next 6 weeks</h3>
+      <p>Independent analytical assessment with 6 expandable predictions, a 4-slider scenario model (oil prices, GDP, recession risk), 8-week probability forecasts, cost analysis with the 60:1 asymmetry, and prioritized recommendations. Fully interactive.</p>
+      <div class="meta"><div>Mar 31, 2026</div><div>Chart.js</div><div>Analyst view</div></div>
+    </a>
+    <a class="card" href="./weapons-explorer.html">
+      <span class="cat">Interactive explorer</span>
+      <h3>Weapons systems explorer</h3>
+      <p>12 U.S. platforms across 5 categories. Click any system for full specs. Range rings light up on the theater map. Build strike packages with a real-time cost calculator. Preset loadouts for Phase I strikes, SEAD, and monthly defense.</p>
+      <div class="meta"><div>12 systems</div><div>SVG map</div><div>Cost calculator</div></div>
+    </a>
+    <a class="card" href="./theater-map.html">
+      <span class="cat">Interactive map</span>
+      <h3>Theater map — Red Sea / Iran / Gulf</h3>
+      <p>Pan-and-zoom theater map with 11 toggleable layers: naval positions, targets, strike arcs, attack incidents, animated Houthi vectors, Iran supply routes, Saudi oil reroute. 18 clickable markers with detailed intel panels.</p>
+      <div class="meta"><div>11 layers</div><div>18 markers</div><div>Full theater</div></div>
+    </a>
+    <a class="card" href="./escalation-simulator.html">
+      <span class="cat">Branching simulator</span>
+      <h3>Escalation simulator</h3>
+      <p>Walk through the 10-rung escalation ladder. At each rung, choose a response: escalate, negotiate, covert action, or maintain posture. Adversary reactions cascade. Live dashboard tracks oil prices, costs, coalition cohesion, and endstate.</p>
+      <div class="meta"><div>6 decision points</div><div>18 outcomes</div></div>
+    </a>
+  </div>
 
-<div class="grid grid-2">
-<a href="dashboard.html" class="card card-featured" data-accent="blue" style="grid-column:1/-1">
-<div class="card-content">
-<span class="card-type type-interactive">Interactive dashboard</span>
-<h2 class="card-title">Strategic analysis: the next 6 weeks</h2>
-<p class="card-desc">Independent analytical assessment with 6 expandable predictions, a 4-slider scenario model (oil prices, GDP, recession risk), 8-week probability forecasts, cost analysis with the 60:1 asymmetry, and prioritized recommendations. Fully interactive.</p>
-<div class="card-meta">
-<span>March 31, 2026</span>
-<span>Chart.js + interactive controls</span>
-<span>Analyst perspective</span>
-</div>
-</div>
-<div class="card-visual">
-<svg class="mini-chart" viewBox="0 0 400 260" preserveAspectRatio="none">
-<path d="M0 200 Q50 190 100 170 Q150 140 200 120 Q250 100 300 110 Q350 120 400 105" fill="none" stroke="#4793e0" stroke-width="2" opacity="0.6"/>
-<path d="M0 220 Q50 215 100 200 Q150 175 200 155 Q250 130 300 120 Q350 115 400 125" fill="none" stroke="#ef5350" stroke-width="1.5" opacity="0.4"/>
-<path d="M0 180 Q50 185 100 195 Q150 200 200 195 Q250 185 300 190 Q350 200 400 195" fill="none" stroke="#4caf50" stroke-width="1" opacity="0.3"/>
-</svg>
-</div>
-</a>
-</div>
+  <h2 class="sec"><span>CJCS perspective</span><span class="n">Chairman of the Joint Chiefs of Staff</span></h2>
+  <div class="grid three">
+    <a class="card pdf" href="./docs/CJCS_Memo_V8.pdf">
+      <span class="cat">PDF · 36 pages</span>
+      <h3>V8 — U.S. response options (Houthi)</h3>
+      <p>The foundational memo. Military options, weapons systems, covert action options A–F, HVT assessment, economic dashboard, escalation ladder, and 22 programmatic appendix graphics.</p>
+      <div class="meta"><div>9 Mar 2025</div><div>22 graphics</div></div>
+    </a>
+    <a class="card pdf" href="./docs/CJCS_Memo_V9.pdf">
+      <span class="cat">PDF · 10 pages</span>
+      <h3>V9 — Supplemental update (Iran War)</h3>
+      <p>Updates V8 for Operation Epic Fury, Hormuz closure, Houthi re-entry, dual chokepoint, HVT status update, revised escalation ladder (Rung 4 → 9), and V8 prediction scorecard.</p>
+      <div class="meta"><div>31 Mar 2026</div><div>6 graphics</div></div>
+    </a>
+    <a class="card pdf new" href="./docs/CJCS_Memo_V10.pdf">
+      <span class="cat">PDF · 37 pages</span>
+      <h3>V10 — NSC Briefing Book (Day 15)</h3>
+      <p>Full NSC Principals meeting briefing for Mon 16 Mar. Three decision requirements, theater status matrix, V8 6/6 scorecard, Houthi reentry calculus, Hormuz escort timeline &amp; costs, 30/60/90 forecasts, LOAC review.</p>
+      <div class="meta"><div>14 Mar 2026</div><div>15 appendices</div></div>
+    </a>
+  </div>
 
-<div class="grid grid-3">
-<a href="weapons-explorer.html" class="card" data-accent="red">
-<span class="card-type type-interactive">Interactive explorer</span>
-<h3 class="card-title">Weapons systems explorer</h3>
-<p class="card-desc">12 U.S. platforms across 5 categories. Click any system for full specs. Range rings light up on the theater map. Build strike packages with a real-time cost calculator. Preset loadouts for Phase I strikes, SEAD, and monthly defense.</p>
-<div class="card-meta">
-<span>12 systems</span>
-<span>SVG map + calculator</span>
-</div>
-</a>
+  <h2 class="sec"><span>CIA perspective</span><span class="n">Director of Central Intelligence</span></h2>
+  <div class="grid">
+    <a class="card cia" href="./docs/CIA_Intel_Assessment.pdf">
+      <span class="cat">PDF · 12 pages</span>
+      <h3>CIA Intelligence Assessment — Houthi threat &amp; covert action</h3>
+      <p>Five key judgments with IC confidence levels. Adversary decision calculus, Iran-Houthi C2 disruption assessment, 12-week threat forecast, source network status, updated covert action matrix, counterintelligence concerns, and PIRs.</p>
+      <div class="meta"><div>31 Mar 2026</div><div>5 graphics</div><div>NESAMC coordination</div></div>
+    </a>
+  </div>
 
-<a href="theater-map.html" class="card" data-accent="amber">
-<span class="card-type type-interactive">Interactive map</span>
-<h3 class="card-title">Theater map — Red Sea / Iran / Gulf</h3>
-<p class="card-desc">Pan-and-zoom theater map with 11 toggleable layers: naval positions, targets, strike arcs, attack incidents, animated Houthi vectors, Iran supply routes, Saudi oil reroute. 18 clickable markers with detailed intel panels.</p>
-<div class="card-meta">
-<span>Full theater coverage</span>
-<span>11 layers, 18 markers</span>
-</div>
-</a>
+  <h2 class="sec"><span>About</span><span class="n">Methodology &amp; sources</span></h2>
+  <div class="about">
+    <h3>Methodology</h3>
+    <p>This simulation centers on a fictional 2025–2026 conflict scenario involving Houthi Red Sea attacks, U.S.–Iran hostilities, and principals-level decision-making. Documents are written from specific institutional perspectives (CJCS, CIA Director, independent analyst) using authentic formatting and analytical frameworks sourced from publicly available references including CJCSM 3160.01A, JP 3-60, NARA RG 243, and the Senate Intelligence Committee drone report.</p>
+    <p>All information derives from publicly available open sources. Fictional elements (HVT profiles, coordinates, source networks) are explicitly marked throughout.</p>
+    <h3 style="margin-top:24px">Sources</h3>
+    <p class="sources">ACLED · Al Jazeera · AP News · Arab Center DC · Axios · Bloomberg · Britannica · CFR Global Conflict Tracker · CNBC · CNN · Counter Extremism Project · CRS · CTC Sentinel · CSIS · Dallas Fed · EIA · FDD Long War Journal · Financial Times · Global Security Review · House of Commons Library · IEA · ISW · MARAD · NPR · ORF Middle East · PBS NewsHour · Reuters · The Atlantic · The National · Times of Israel · UN Security Council · Wikipedia · worldmonitor.app</p>
+    <p style="margin-top:18px">This is a retroactive simulation exercise prepared for academic and educational purposes. All analysis, policy positions, and recommendations reflect the views of the author. No classified or restricted information is used or represented.</p>
+  </div>
 
-<a href="escalation-simulator.html" class="card" data-accent="purple">
-<span class="card-type type-interactive">Simulator</span>
-<h3 class="card-title">Escalation simulator</h3>
-<p class="card-desc">Walk through the 10-rung escalation ladder. At each rung, choose a response: escalate, negotiate, covert action, or maintain posture. Adversary reactions cascade. Live dashboard tracks oil prices, costs, coalition cohesion, and endstate.</p>
-<div class="card-meta">
-<span>6 decision points</span>
-<span>18 branching outcomes</span>
+  <footer>
+    Built with HTML, CSS, JavaScript, Chart.js, Python (reportlab, matplotlib), and Claude Opus 4.6.<br>
+    All code and deliverables produced in collaboration with <a href="https://claude.ai">Anthropic's Claude</a>.
+  </footer>
 </div>
-</a>
-</div>
-
-<div class="section-label">CJCS perspective — Chairman of the Joint Chiefs of Staff</div>
-
-<div class="grid grid-2">
-<a href="docs/CJCS_Memo_V8.pdf" class="card" data-accent="blue">
-<span class="card-type type-pdf">PDF — 36 pages</span>
-<h3 class="card-title">V8: U.S. response options — Houthi threat</h3>
-<p class="card-desc">The foundational memo. Military options, weapons systems, covert action options A–F, HVT assessment with targeting hierarchy, economic impact dashboard, escalation ladder, and 22 programmatic appendix graphics.</p>
-<div class="card-meta">
-<span>March 9, 2025 (retroactive)</span>
-<span>22 embedded graphics</span>
-</div>
-</a>
-
-<a href="docs/CJCS_Memo_V9.pdf" class="card" data-accent="blue">
-<span class="card-type type-pdf">PDF — 10 pages</span>
-<h3 class="card-title">V9: Supplemental update — 2026 Iran War</h3>
-<p class="card-desc">Updates V8 for Operation Epic Fury, Hormuz closure, Houthi re-entry, dual chokepoint assessment, HVT status update, revised escalation ladder (Rung 4 → 9), and V8 prediction scorecard (8/8 confirmed).</p>
-<div class="card-meta">
-<span>March 31, 2026</span>
-<span>6 embedded graphics</span>
-</div>
-</a>
-</div>
-
-<div class="section-label">CIA perspective — Director of Central Intelligence</div>
-
-<div class="grid grid-2">
-<a href="docs/CIA_Intel_Assessment.pdf" class="card" data-accent="green">
-<span class="card-type type-pdf">PDF — 12 pages</span>
-<h3 class="card-title">CIA intelligence assessment: Houthi threat & covert action options</h3>
-<p class="card-desc">Five key judgments with IC confidence levels. Adversary decision calculus, Iran-Houthi C2 disruption assessment, 12-week threat forecast, source network status, updated covert action matrix, counterintelligence concerns, and PIRs.</p>
-<div class="card-meta">
-<span>March 31, 2026</span>
-<span>5 graphics, NESAMC coordination</span>
-</div>
-</a>
-</div>
-
-<div class="about-section">
-<div class="section-label" style="padding-left:0;padding-right:0">About</div>
-<div class="about-grid">
-<div class="about-card">
-<h3>Methodology</h3>
-<p>This simulation centers on a fictional 2025–2026 conflict scenario involving Houthi Red Sea attacks, U.S.-Iran hostilities, and principals-level decision-making. Documents are written from specific institutional perspectives (CJCS, CIA Director, independent analyst) using authentic formatting and analytical frameworks sourced from publicly available references including CJCSM 3160.01A, JP 3-60, NARA RG 243, and the Senate Intelligence Committee drone report.</p>
-<p style="margin-top:10px">All information derives from publicly available open sources. Fictional elements (HVT profiles, coordinates, source networks) are explicitly marked throughout.</p>
-</div>
-<div class="about-card">
-<h3>Sources</h3>
-<p style="font-size:12px;line-height:2">ACLED &bull; Al Jazeera &bull; AP News &bull; Arab Center DC &bull; Axios &bull; Bloomberg &bull; Britannica &bull; CFR Global Conflict Tracker &bull; CNBC &bull; CNN &bull; Counter Extremism Project &bull; CRS &bull; CTC Sentinel &bull; CSIS &bull; Dallas Fed &bull; EIA &bull; FDD Long War Journal &bull; Financial Times &bull; Global Security Review &bull; House of Commons Library &bull; IEA &bull; ISW &bull; MARAD &bull; NPR &bull; ORF Middle East &bull; PBS NewsHour &bull; Reuters &bull; The Atlantic &bull; The National &bull; Times of Israel &bull; UN Security Council &bull; Wikipedia &bull; worldmonitor.app</p>
-</div>
-</div>
-</div>
-
-<footer>
-<p>This is a retroactive simulation exercise prepared for academic and educational purposes. All analysis, policy positions, and recommendations reflect the views of the author. No classified or restricted information is used or represented.</p>
-<p style="margin-top:8px">Built with HTML, CSS, JavaScript, Chart.js, Python (reportlab, matplotlib), and Claude Opus 4.6. All code and deliverables produced in collaboration with <a href="https://claude.ai" style="color:var(--accent);text-decoration:none">Anthropic's Claude</a>.</p>
-</footer>
-
 </body>
 </html>
