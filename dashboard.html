@@ -247,6 +247,7 @@ recs.forEach(r => {
   const d = document.createElement('div');
   d.className = 'rec ' + r.cls;
   d.innerHTML = `<div class="rec-label" style="color:${r.lc}">${r.label}</div><p>${r.text}</p>`;
+    rc.appendChild(d);
 });
 
 function updateModel() {
@@ -304,5 +305,6 @@ new Chart(document.getElementById('oilChart'), {
   options:{...cOpts,spanGaps:false,scales:{...cOpts.scales,y:{...cOpts.scales.y,min:60,max:180,title:{display:true,text:'$/barrel',color:'#64748b'}}},plugins:{...cOpts.plugins,title:{display:true,text:'Oil price: actual trajectory + 3 scenario forecasts',color:'#e2e8f0',font:{size:15,weight:'500',family:'DM Sans'}}}}
   });
 </script>
+<script src="./home-button.js"></script>
 </body>
 </html>
