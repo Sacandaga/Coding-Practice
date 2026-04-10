@@ -346,5 +346,5 @@ window.addEventListener('mousemove', e => { if (!dragging) return; panX += e.cli
 window.addEventListener('mouseup', () => { dragging = false; });
 wrap.addEventListener('wheel', e => { e.preventDefault(); zoomMap(e.deltaY < 0 ? 1.1 : 0.9); }, {passive: false});
 </script>
-</body>
+<script src="./home-button.js"></script></body>
 </html>
